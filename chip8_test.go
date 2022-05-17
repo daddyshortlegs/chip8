@@ -13,12 +13,3 @@ func TestDecodeByte(t *testing.T) {
 	assert.Equal(t, byte(0x20), decoded.second, "Second nibble")
 }
 
-type instruction struct {
-	first byte
-	second byte
-}
-
-
-func decodeInstruction(bytes [2]byte) instruction {
-	return instruction{bytes[0], bytes[1]}
-}
