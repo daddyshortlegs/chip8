@@ -11,10 +11,12 @@ type memory struct {
 }
 
 const (
-	Jump = iota
+	ClearScreen = iota
+	Jump
 	SetRegister
 	AddValueToRegister
 	SetIndexRegister
+	DisplayDraw
 )
 
 func (m *memory) load(bytes []byte) {
@@ -27,21 +29,5 @@ func (m memory) fetch() instruction {
 
 func (m *memory) decode() int {
 	firstByte := m.bytes[0]
-	mask := byte(0b11110000)
-
-	firstNibble := firstByte & mask
-
-	if firstNibble == 0x10 {
-		return Jump
-	}
-
-	if firstNibble == 0x60 {
-		return SetRegister
-	}
-
-	if firstNibble == 0x70 {
-		return AddValueToRegister
-	}
-
-	return SetIndexRegister
+	return decodeInstruction(firstByte)
 }
