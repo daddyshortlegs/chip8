@@ -21,15 +21,29 @@ func (v *chip8vm) load(bytes []byte) {
 
 func (v *chip8vm) run() {
 	instruction := v.m.fetch()
-	decodeInstruction(instruction.first)
 
+	firstByte := instruction.first
+	secondByte := instruction.second
+	decodeInstruction(firstByte)
+
+	v.setRegister(firstByte, secondByte)
+
+	instruction = v.m.fetch()
+	if instruction.first == 0x00 {
+		return
+	}
+
+	firstByte = instruction.first
+	secondByte = instruction.second
+	decodeInstruction(firstByte)
+
+	v.setRegister(firstByte, secondByte)
+}
+
+func (v *chip8vm) setRegister(firstByte byte, secondByte byte) {
 	mask := byte(0b00001111)
-
-	secondNibble := instruction.first & mask
-
-	value := instruction.second
-
-	v.registers[secondNibble] = value
+	secondNibble := firstByte & mask
+	v.registers[secondNibble] = secondByte
 }
 
 const (
@@ -49,9 +63,4 @@ func (m *memory) fetch() instruction {
 	i := instruction{m.bytes[m.pc], m.bytes[m.pc+1]}
 	m.pc += 2
 	return i
-}
-
-func (m *memory) decode() int {
-	firstByte := m.bytes[0]
-	return decodeInstruction(firstByte)
 }
