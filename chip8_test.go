@@ -37,39 +37,20 @@ func (suite *Chip8TestSuite) TestFetchNextInstruction() {
 	suite.Equal(byte(0x44), decoded.second, "Second byte")
 }
 
-func (suite *Chip8TestSuite) TestSetRegister() {
-	suite.vm = chip8vm{}
-	instruction := []byte{0x60, 0x01}
-	suite.vm.load(instruction)
-	suite.vm.run()
-
-	suite.Equal(byte(0x01), suite.vm.registers[0], "Register V0")
-}
-func (suite *Chip8TestSuite) TestSetRegisterToSomefinkElse() {
-	suite.vm = chip8vm{}
-	instruction := []byte{0x60, 0x02}
-	suite.vm.load(instruction)
-	suite.vm.run()
-
-	suite.Equal(byte(0x02), suite.vm.registers[0], "Register V0")
+func (suite *Chip8TestSuite) TestSetRegisters() {
+	verifyRegisterSet(suite, []byte{0x60, 0xFF}, 0, 0xFF)
+	verifyRegisterSet(suite, []byte{0x61, 0xEE}, 1, 0xEE)
+	verifyRegisterSet(suite, []byte{0x62, 0xDD}, 2, 0xDD)
+	verifyRegisterSet(suite, []byte{0x63, 0xCC}, 3, 0xCC)
+	verifyRegisterSet(suite, []byte{0x64, 0xBB}, 4, 0xBB)
 }
 
-func (suite *Chip8TestSuite) TestSetRegister2() {
+func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, result int) {
 	suite.vm = chip8vm{}
-	instruction := []byte{0x61, 0xFF}
 	suite.vm.load(instruction)
 	suite.vm.run()
 
-	suite.Equal(byte(0xFF), suite.vm.registers[1], "Register V0")
-}
-
-func (suite *Chip8TestSuite) TestSetRegister2ToSomethingElse() {
-	suite.vm = chip8vm{}
-	instruction := []byte{0x61, 0xEE}
-	suite.vm.load(instruction)
-	suite.vm.run()
-
-	suite.Equal(byte(0xEE), suite.vm.registers[1], "Register V0")
+	suite.Equal(byte(result), suite.vm.registers[register])
 }
 
 func TestChip8TestSuite(t *testing.T) {
