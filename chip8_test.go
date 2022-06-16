@@ -55,12 +55,13 @@ func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, 
 
 func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 	suite.vm = chip8vm{}
-	data := []byte{0x60, 0x11, 0x61, 0x12}
+	data := []byte{0x60, 0x11, 0x61, 0x12, 0x65, 0xCC}
 	suite.vm.load(data)
 	suite.vm.run()
 
 	suite.Equal(byte(0x11), suite.vm.registers[0])
 	suite.Equal(byte(0x12), suite.vm.registers[1])
+	suite.Equal(byte(0xCC), suite.vm.registers[5])
 }
 
 func TestChip8TestSuite(t *testing.T) {

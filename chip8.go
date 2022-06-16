@@ -20,24 +20,19 @@ func (v *chip8vm) load(bytes []byte) {
 }
 
 func (v *chip8vm) run() {
-	instruction := v.m.fetch()
 
-	firstByte := instruction.first
-	secondByte := instruction.second
-	decodeInstruction(firstByte)
+	var firstByte byte
+	for ok := true; ok; ok = !(firstByte == 0x00) {
+		instruction := v.m.fetch()
 
-	v.setRegister(firstByte, secondByte)
+		firstByte = instruction.first
+		secondByte := instruction.second
+		decodeInstruction(firstByte)
 
-	instruction = v.m.fetch()
-	if instruction.first == 0x00 {
-		return
+		if firstByte != 0x00 {
+			v.setRegister(firstByte, secondByte)
+		}
 	}
-
-	firstByte = instruction.first
-	secondByte = instruction.second
-	decodeInstruction(firstByte)
-
-	v.setRegister(firstByte, secondByte)
 }
 
 func (v *chip8vm) setRegister(firstByte byte, secondByte byte) {
