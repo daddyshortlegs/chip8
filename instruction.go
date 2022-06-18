@@ -1,5 +1,14 @@
 package chip8
 
+const (
+	ClearScreen = iota
+	Jump
+	SetRegister
+	AddValueToRegister
+	SetIndexRegister
+	DisplayDraw
+)
+
 func decodeInstruction(firstByte byte) int {
 	mask := byte(0b11110000)
 

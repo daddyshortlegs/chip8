@@ -49,43 +49,20 @@ func (v *chip8vm) run() {
 }
 
 func (v *chip8vm) setRegister(firstByte byte, secondByte byte) {
-	mask := byte(0b00001111)
-	index := firstByte & mask
-	v.registers[index] = secondByte
+	v.registers[extractNibble(firstByte)] = secondByte
 }
 
 func (v *chip8vm) addToRegister(firstByte byte, secondByte byte) {
-	mask := byte(0b00001111)
-	index := firstByte & mask
-	v.registers[index] += secondByte
+	v.registers[extractNibble(firstByte)] += secondByte
 }
 
 func (v *chip8vm) setIndexRegister(firstByte byte, secondByte byte) {
-	shiftedBytes := uint16(firstByte) << 8
-	result := shiftedBytes | uint16(secondByte)
-	mask := uint16(0b0000111111111111)
-	address := result & mask
-	v.indexRegister = address
+	v.indexRegister = extract12BitNumber(firstByte, secondByte)
 }
 
 func (v *chip8vm) jump(firstByte byte, secondByte byte) {
-	shiftedBytes := uint16(firstByte) << 8
-	result := shiftedBytes | uint16(secondByte)
-	mask := uint16(0b0000111111111111)
-	address := result & mask
-
-	v.pc = address
-
+	v.pc = extract12BitNumber(firstByte, secondByte)
 }
-
-const (
-	ClearScreen = iota
-	Jump
-	SetRegister
-	AddValueToRegister
-	SetIndexRegister
-	DisplayDraw
-)
 
 func (m *memory) load(bytes []byte) {
 	copy(m.bytes[:], bytes)
