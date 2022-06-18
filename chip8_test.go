@@ -82,6 +82,24 @@ func (suite *Chip8TestSuite) TestsSetAndAddToRegister() {
 	suite.Equal(byte(0x0B), suite.vm.registers[0])
 }
 
+func (suite *Chip8TestSuite) TestSetIndexRegister() {
+	suite.vm = chip8vm{}
+	data := []byte{0xA0, 0x0A}
+	suite.vm.load(data)
+	suite.vm.run()
+
+	suite.Equal(uint16(0x0A), suite.vm.indexRegister)
+}
+
+func (suite *Chip8TestSuite) TestSetIndexRegisterWith12BitValue() {
+	suite.vm = chip8vm{}
+	data := []byte{0xAF, 0xFF}
+	suite.vm.load(data)
+	suite.vm.run()
+
+	suite.Equal(uint16(0xFFF), suite.vm.indexRegister)
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }

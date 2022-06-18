@@ -11,8 +11,9 @@ type memory struct {
 }
 
 type chip8vm struct {
-	m         memory
-	registers [16]byte
+	m             memory
+	registers     [16]byte
+	indexRegister uint16
 }
 
 func (v *chip8vm) load(bytes []byte) {
@@ -38,7 +39,8 @@ func (v *chip8vm) run() {
 			v.setRegister(firstByte, secondByte)
 		case AddValueToRegister:
 			v.addToRegister(firstByte, secondByte)
-
+		case SetIndexRegister:
+			v.setIndexRegister(firstByte, secondByte)
 		}
 	}
 }
@@ -53,6 +55,13 @@ func (v *chip8vm) addToRegister(firstByte byte, secondByte byte) {
 	mask := byte(0b00001111)
 	index := firstByte & mask
 	v.registers[index] += secondByte
+}
+
+func (v *chip8vm) setIndexRegister(firstByte byte, secondByte byte) {
+	shiftedBytes := uint16(firstByte) << 8
+	result := shiftedBytes | uint16(secondByte)
+	mask := uint16(0b0000111111111111)
+	v.indexRegister = result & mask
 }
 
 const (
