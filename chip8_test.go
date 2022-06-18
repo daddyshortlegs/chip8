@@ -7,7 +7,6 @@ import (
 
 type Chip8TestSuite struct {
 	suite.Suite
-	m  memory
 	vm chip8vm
 }
 
@@ -16,23 +15,22 @@ func (suite *Chip8TestSuite) SetupTest() {
 }
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
-	suite.m = memory{}
 	suite.vm = chip8vm{}
 	instruction := []byte{0x12, 0x20}
-	suite.m.load(instruction)
+	suite.vm.load(instruction)
 
-	decoded := suite.m.fetch()
+	decoded := suite.vm.fetchAndIncrement()
 	suite.Equal(byte(0x12), decoded.first, "First byte")
 	suite.Equal(byte(0x20), decoded.second, "Second byte")
 }
 
 func (suite *Chip8TestSuite) TestFetchNextInstruction() {
-	suite.m = memory{}
+	suite.vm = chip8vm{}
 	instruction := []byte{0x12, 0x20, 0x33, 0x44}
-	suite.m.load(instruction)
-	suite.m.fetch()
+	suite.vm.load(instruction)
+	suite.vm.fetchAndIncrement()
 
-	decoded := suite.m.fetch()
+	decoded := suite.vm.fetchAndIncrement()
 
 	suite.Equal(byte(0x33), decoded.first, "First byte")
 	suite.Equal(byte(0x44), decoded.second, "Second byte")

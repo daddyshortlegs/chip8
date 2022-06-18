@@ -5,31 +5,32 @@ type instruction struct {
 	second byte
 }
 
-type memory struct {
-	bytes [4096]byte
-	pc    int
-}
-
 type chip8vm struct {
-	m             memory
+	memory        [4096]byte
 	registers     [16]byte
 	indexRegister uint16
 	pc            uint16
 }
 
 func (v *chip8vm) load(bytes []byte) {
-	v.m.load(bytes)
+	copy(v.memory[:], bytes)
 }
 
 func (v *chip8vm) run() {
 	var firstByte byte
+	var theInstruction int
 	for ok := true; ok; ok = !(firstByte == 0x00) {
-		instruction := v.m.fetch()
+		var instr instruction
+		if theInstruction != Jump {
+			instr = v.fetchAndIncrement()
+		} else {
+			instr = v.fetch()
+		}
 
-		firstByte = instruction.first
-		secondByte := instruction.second
+		firstByte = instr.first
+		secondByte := instr.second
 
-		theInstruction := decodeInstruction(firstByte)
+		theInstruction = decodeInstruction(firstByte)
 
 		if firstByte == 0x00 {
 			break
@@ -48,6 +49,17 @@ func (v *chip8vm) run() {
 	}
 }
 
+func (v *chip8vm) fetch() instruction {
+	i := instruction{v.memory[v.pc], v.memory[v.pc+1]}
+	return i
+}
+
+func (v *chip8vm) fetchAndIncrement() instruction {
+	i := instruction{v.memory[v.pc], v.memory[v.pc+1]}
+	v.pc += 2
+	return i
+}
+
 func (v *chip8vm) setRegister(firstByte byte, secondByte byte) {
 	v.registers[extractNibble(firstByte)] = secondByte
 }
@@ -62,14 +74,4 @@ func (v *chip8vm) setIndexRegister(firstByte byte, secondByte byte) {
 
 func (v *chip8vm) jump(firstByte byte, secondByte byte) {
 	v.pc = extract12BitNumber(firstByte, secondByte)
-}
-
-func (m *memory) load(bytes []byte) {
-	copy(m.bytes[:], bytes)
-}
-
-func (m *memory) fetch() instruction {
-	i := instruction{m.bytes[m.pc], m.bytes[m.pc+1]}
-	m.pc += 2
-	return i
 }
