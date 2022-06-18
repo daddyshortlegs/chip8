@@ -45,11 +45,9 @@ func (suite *Chip8TestSuite) TestSetRegisters() {
 }
 
 func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, result int) {
-	suite.vm = chip8vm{}
-	suite.vm.load(instruction)
-	suite.vm.run()
-
+	suite.executeInstruction(instruction)
 	suite.Equal(byte(result), suite.vm.registers[register])
+
 }
 
 func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
@@ -63,48 +61,34 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 	suite.Equal(byte(0xCC), suite.vm.registers[5])
 }
 
-func (suite *Chip8TestSuite) TestAddToRegister() {
+func (suite *Chip8TestSuite) executeInstruction(data []byte) {
 	suite.vm = chip8vm{}
-	data := []byte{0x70, 0x0A}
 	suite.vm.load(data)
 	suite.vm.run()
+}
 
+func (suite *Chip8TestSuite) TestAddToRegister() {
+	suite.executeInstruction([]byte{0x70, 0x0A})
 	suite.Equal(byte(0x0A), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestsSetAndAddToRegister() {
-	suite.vm = chip8vm{}
-	data := []byte{0x60, 0x01, 0x70, 0x0A}
-	suite.vm.load(data)
-	suite.vm.run()
-
+	suite.executeInstruction([]byte{0x60, 0x01, 0x70, 0x0A})
 	suite.Equal(byte(0x0B), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestSetIndexRegister() {
-	suite.vm = chip8vm{}
-	data := []byte{0xA0, 0x0A}
-	suite.vm.load(data)
-	suite.vm.run()
-
+	suite.executeInstruction([]byte{0xA0, 0x0A})
 	suite.Equal(uint16(0x0A), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestSetIndexRegisterWith12BitValue() {
-	suite.vm = chip8vm{}
-	data := []byte{0xAF, 0xFF}
-	suite.vm.load(data)
-	suite.vm.run()
-
+	suite.executeInstruction([]byte{0xAF, 0xFF})
 	suite.Equal(uint16(0xFFF), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestSetJumpToAddress() {
-	suite.vm = chip8vm{}
-	data := []byte{0x12, 0x00}
-	suite.vm.load(data)
-	suite.vm.run()
-
+	suite.executeInstruction([]byte{0x12, 0x00})
 	suite.Equal(uint16(0x200), suite.vm.pc)
 }
 
