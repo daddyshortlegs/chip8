@@ -17,6 +17,7 @@ func (suite *Chip8TestSuite) SetupTest() {
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
 	suite.m = memory{}
+	suite.vm = chip8vm{}
 	instruction := []byte{0x12, 0x20}
 	suite.m.load(instruction)
 
@@ -98,6 +99,15 @@ func (suite *Chip8TestSuite) TestSetIndexRegisterWith12BitValue() {
 	suite.vm.run()
 
 	suite.Equal(uint16(0xFFF), suite.vm.indexRegister)
+}
+
+func (suite *Chip8TestSuite) TestSetJumpToAddress() {
+	suite.vm = chip8vm{}
+	data := []byte{0x12, 0x00}
+	suite.vm.load(data)
+	suite.vm.run()
+
+	suite.Equal(uint16(0x200), suite.vm.pc)
 }
 
 func TestChip8TestSuite(t *testing.T) {
