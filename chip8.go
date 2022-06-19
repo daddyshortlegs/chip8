@@ -37,14 +37,14 @@ func (v *chip8vm) run() {
 		}
 
 		switch theInstruction {
+		case Jump:
+			v.jump(firstByte, secondByte)
 		case SetRegister:
 			v.setRegister(firstByte, secondByte)
 		case AddValueToRegister:
 			v.addToRegister(firstByte, secondByte)
 		case SetIndexRegister:
 			v.setIndexRegister(firstByte, secondByte)
-		case Jump:
-			v.jump(firstByte, secondByte)
 		}
 	}
 }
