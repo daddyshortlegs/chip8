@@ -13,7 +13,7 @@ func (s stack) length() int {
 
 func (s *stack) push(value uint16) error {
 	if s.index >= len(s.address) {
-		return errors.New("Stack overflow")
+		return errors.New("stack overflow")
 	}
 	s.address[s.index] = value
 	s.index++
@@ -23,7 +23,7 @@ func (s *stack) push(value uint16) error {
 func (s *stack) pop() (uint16, error) {
 	s.index--
 	if s.index < 0 {
-		return 0, errors.New("Stack empty")
+		return 0, errors.New("stack empty")
 	}
 	value := s.address[s.index]
 	return value, nil

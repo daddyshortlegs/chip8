@@ -52,13 +52,13 @@ func (suite *StackTestSuite) TestBlowStack() {
 	}
 
 	err := theStack.push(uint16(0x1111))
-	suite.Equal(errors.New("Stack overflow"), err)
+	suite.Equal(errors.New("stack overflow"), err)
 }
 
 func (suite *StackTestSuite) TestPopEmptyStack() {
 	theStack := stack{}
 	_, err := theStack.pop()
-	suite.Equal(errors.New("Stack empty"), err)
+	suite.Equal(errors.New("stack empty"), err)
 }
 
 func TestStackTestSuite(t *testing.T) {
