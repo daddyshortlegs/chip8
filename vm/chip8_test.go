@@ -1,4 +1,4 @@
-package chip8
+package vm
 
 import (
 	"github.com/stretchr/testify/suite"

@@ -1,4 +1,4 @@
-package chip8
+package vm
 
 type instruction struct {
 	first  byte

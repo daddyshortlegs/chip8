@@ -1,4 +1,4 @@
-package chip8
+package vm
 
 func extractNibble(firstByte byte) byte {
 	mask := byte(0b00001111)
