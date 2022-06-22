@@ -1,21 +1,9 @@
 package main
 
-import (
-	"chip8"
-	"github.com/veandco/go-sdl2/sdl"
-)
+import "github.com/veandco/go-sdl2/sdl"
 
 type display struct {
 	window *sdl.Window
-}
-
-func main() {
-	theDisplay := display{}
-	theDisplay.startUp()
-
-	vm := chip8.Chip8vm{}
-	instruction := []byte{0x12, 0x20}
-	vm.Load(instruction)
 }
 
 func (d display) startUp() {
