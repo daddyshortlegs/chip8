@@ -9,6 +9,6 @@ func main() {
 	theDisplay.startUp()
 
 	vm := chip8.Chip8vm{}
-	instruction := []byte{0x12, 0x20}
+	instruction := []byte{0x00, 0xE0}
 	vm.Load(instruction)
 }
