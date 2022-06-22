@@ -20,20 +20,26 @@ func (d display) startUp() {
 	d.window = window
 	defer d.window.Destroy()
 
-	d.drawStuff(err, window)
+	d.clearScreen()
+	d.drawPattern()
 
 	d.waitForExit()
 }
 
-func (d display) drawStuff(err error, window *sdl.Window) {
-	surface := getSurface(err, window)
-	clearScreen(surface)
+func (d display) drawPattern() {
+	surface := d.getSurface()
 
-	drawPoint(surface, 0, 0)
-	drawPoint(surface, 1, 1)
-	drawPoint(surface, 2, 2)
+	d.drawPoint(surface, 0, 0)
+	d.drawPoint(surface, 1, 1)
+	d.drawPoint(surface, 2, 2)
 
-	window.UpdateSurface()
+	d.window.UpdateSurface()
+}
+
+func (d display) clearScreen() {
+	surface := d.getSurface()
+	surface.FillRect(nil, 0)
+	d.window.UpdateSurface()
 }
 
 func (d display) waitForExit() {
@@ -50,19 +56,15 @@ func (d display) waitForExit() {
 	}
 }
 
-func getSurface(err error, window *sdl.Window) *sdl.Surface {
-	surface, err := window.GetSurface()
+func (d display) drawPoint(surface *sdl.Surface, x int32, y int32) {
+	rect := sdl.Rect{x * 10, y * 10, 9, 9}
+	surface.FillRect(&rect, 0x00fffff0)
+}
+
+func (d display) getSurface() *sdl.Surface {
+	surface, err := d.window.GetSurface()
 	if err != nil {
 		panic(err)
 	}
 	return surface
-}
-
-func clearScreen(surface *sdl.Surface) error {
-	return surface.FillRect(nil, 0)
-}
-
-func drawPoint(surface *sdl.Surface, x int32, y int32) {
-	rect := sdl.Rect{x * 10, y * 10, 9, 9}
-	surface.FillRect(&rect, 0x00fffff0)
 }
