@@ -39,7 +39,7 @@ func (v *Chip8vm) run() {
 		firstByte = instr.first
 		secondByte := instr.second
 
-		theInstruction = decodeInstruction(firstByte, secondByte)
+		theInstruction = decodeInstruction(instr)
 
 		if firstByte == 0x00 && secondByte == 0x00 {
 			break

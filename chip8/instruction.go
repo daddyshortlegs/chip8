@@ -9,13 +9,13 @@ const (
 	DisplayDraw
 )
 
-func decodeInstruction(firstByte byte, secondByte byte) int {
-	if firstByte == 0x00 && secondByte == 0xE0 {
+func decodeInstruction(instr instruction) int {
+	if instr.first == 0x00 && instr.second == 0xE0 {
 		return ClearScreen
 	}
 
 	mask := byte(0b11110000)
-	firstNibble := firstByte & mask
+	firstNibble := instr.first & mask
 
 	instructions := map[byte]int{
 		0x10: Jump,
