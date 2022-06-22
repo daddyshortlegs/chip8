@@ -1,4 +1,4 @@
-package vm
+package chip8
 
 const (
 	ClearScreen = iota

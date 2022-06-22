@@ -1,4 +1,4 @@
-package vm
+package chip8
 
 import (
 	"github.com/stretchr/testify/assert"

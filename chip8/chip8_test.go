@@ -1,4 +1,4 @@
-package vm
+package chip8
 
 import (
 	"github.com/stretchr/testify/suite"
@@ -7,7 +7,7 @@ import (
 
 type Chip8TestSuite struct {
 	suite.Suite
-	vm chip8vm
+	vm Chip8vm
 }
 
 func (suite *Chip8TestSuite) SetupTest() {
@@ -15,9 +15,9 @@ func (suite *Chip8TestSuite) SetupTest() {
 }
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
-	suite.vm = chip8vm{}
+	suite.vm = Chip8vm{}
 	instruction := []byte{0x12, 0x20}
-	suite.vm.load(instruction)
+	suite.vm.Load(instruction)
 
 	decoded := suite.vm.fetchAndIncrement()
 	suite.Equal(byte(0x12), decoded.first, "First byte")
@@ -25,9 +25,9 @@ func (suite *Chip8TestSuite) TestFetchInstruction() {
 }
 
 func (suite *Chip8TestSuite) TestFetchNextInstruction() {
-	suite.vm = chip8vm{}
+	suite.vm = Chip8vm{}
 	instruction := []byte{0x12, 0x20, 0x33, 0x44}
-	suite.vm.load(instruction)
+	suite.vm.Load(instruction)
 	suite.vm.fetchAndIncrement()
 
 	decoded := suite.vm.fetchAndIncrement()
@@ -51,9 +51,9 @@ func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, 
 }
 
 func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
-	suite.vm = chip8vm{}
+	suite.vm = Chip8vm{}
 	data := []byte{0x60, 0x11, 0x61, 0x12, 0x65, 0xCC}
-	suite.vm.load(data)
+	suite.vm.Load(data)
 	suite.vm.run()
 
 	suite.Equal(byte(0x11), suite.vm.registers[0])
@@ -62,8 +62,8 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 }
 
 func (suite *Chip8TestSuite) executeInstruction(data []byte) {
-	suite.vm = chip8vm{}
-	suite.vm.load(data)
+	suite.vm = Chip8vm{}
+	suite.vm.Load(data)
 	suite.vm.run()
 }
 
@@ -90,6 +90,14 @@ func (suite *Chip8TestSuite) TestSetIndexRegisterWith12BitValue() {
 func (suite *Chip8TestSuite) TestSetJumpToAddress() {
 	suite.executeInstruction([]byte{0x12, 0x00})
 	suite.Equal(uint16(0x200), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestClearScreen() {
+	suite.vm = Chip8vm{}
+	data := []byte{0x12, 0x00}
+	suite.vm.Load(data)
+	suite.vm.run()
+
 }
 
 func TestChip8TestSuite(t *testing.T) {

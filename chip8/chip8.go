@@ -1,22 +1,31 @@
-package vm
+package chip8
 
 type instruction struct {
 	first  byte
 	second byte
 }
 
-type chip8vm struct {
+type Chip8vm struct {
 	memory        [4096]byte
 	registers     [16]byte
 	indexRegister uint16
 	pc            uint16
+	d             Display
 }
 
-func (v *chip8vm) load(bytes []byte) {
+type Display interface {
+	ClearScreen()
+}
+
+func (v *Chip8vm) SetDisplay(d Display) {
+	v.d = d
+}
+
+func (v *Chip8vm) Load(bytes []byte) {
 	copy(v.memory[:], bytes)
 }
 
-func (v *chip8vm) run() {
+func (v *Chip8vm) run() {
 	var firstByte byte
 	var theInstruction int
 	for ok := true; ok; ok = !(firstByte == 0x00) {
@@ -49,29 +58,29 @@ func (v *chip8vm) run() {
 	}
 }
 
-func (v *chip8vm) fetch() instruction {
+func (v *Chip8vm) fetch() instruction {
 	i := instruction{v.memory[v.pc], v.memory[v.pc+1]}
 	return i
 }
 
-func (v *chip8vm) fetchAndIncrement() instruction {
+func (v *Chip8vm) fetchAndIncrement() instruction {
 	i := instruction{v.memory[v.pc], v.memory[v.pc+1]}
 	v.pc += 2
 	return i
 }
 
-func (v *chip8vm) setRegister(firstByte byte, secondByte byte) {
+func (v *Chip8vm) setRegister(firstByte byte, secondByte byte) {
 	v.registers[extractNibble(firstByte)] = secondByte
 }
 
-func (v *chip8vm) addToRegister(firstByte byte, secondByte byte) {
+func (v *Chip8vm) addToRegister(firstByte byte, secondByte byte) {
 	v.registers[extractNibble(firstByte)] += secondByte
 }
 
-func (v *chip8vm) setIndexRegister(firstByte byte, secondByte byte) {
+func (v *Chip8vm) setIndexRegister(firstByte byte, secondByte byte) {
 	v.indexRegister = extract12BitNumber(firstByte, secondByte)
 }
 
-func (v *chip8vm) jump(firstByte byte, secondByte byte) {
+func (v *Chip8vm) jump(firstByte byte, secondByte byte) {
 	v.pc = extract12BitNumber(firstByte, secondByte)
 }

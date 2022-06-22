@@ -1,9 +1,24 @@
 package main
 
-import "github.com/veandco/go-sdl2/sdl"
+import (
+	"chip8"
+	"github.com/veandco/go-sdl2/sdl"
+)
 
-// display is 64x32
+type display struct {
+	window *sdl.Window
+}
+
 func main() {
+	theDisplay := display{}
+	theDisplay.startUp()
+
+	vm := chip8.Chip8vm{}
+	instruction := []byte{0x12, 0x20}
+	vm.Load(instruction)
+}
+
+func (d display) startUp() {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
 	}
@@ -14,8 +29,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer window.Destroy()
+	d.window = window
+	defer d.window.Destroy()
 
+	d.drawStuff(err, window)
+
+	d.waitForExit()
+}
+
+func (d display) drawStuff(err error, window *sdl.Window) {
 	surface := getSurface(err, window)
 	clearScreen(surface)
 
@@ -24,7 +46,9 @@ func main() {
 	drawPoint(surface, 2, 2)
 
 	window.UpdateSurface()
+}
 
+func (d display) waitForExit() {
 	running := true
 	for running {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
