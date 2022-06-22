@@ -28,7 +28,7 @@ func (v *Chip8vm) Load(bytes []byte) {
 func (v *Chip8vm) run() {
 	var firstByte byte
 	var theInstruction int
-	for ok := true; ok; ok = !(firstByte == 0x00) {
+	for {
 		var instr instruction
 		if theInstruction != Jump {
 			instr = v.fetchAndIncrement()
@@ -39,13 +39,15 @@ func (v *Chip8vm) run() {
 		firstByte = instr.first
 		secondByte := instr.second
 
-		theInstruction = decodeInstruction(firstByte)
+		theInstruction = decodeInstruction(firstByte, secondByte)
 
-		if firstByte == 0x00 {
+		if firstByte == 0x00 && secondByte == 0x00 {
 			break
 		}
 
 		switch theInstruction {
+		case ClearScreen:
+			v.d.ClearScreen()
 		case Jump:
 			v.jump(firstByte, secondByte)
 		case SetRegister:

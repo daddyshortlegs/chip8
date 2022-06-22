@@ -92,12 +92,26 @@ func (suite *Chip8TestSuite) TestSetJumpToAddress() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
 }
 
+type mockDisplay struct {
+	screenCleared bool
+}
+
+func (m *mockDisplay) ClearScreen() {
+	m.screenCleared = true
+}
+
 func (suite *Chip8TestSuite) TestClearScreen() {
 	suite.vm = Chip8vm{}
-	data := []byte{0x12, 0x00}
-	suite.vm.Load(data)
+	var display Display
+
+	m := mockDisplay{false}
+	display = &m
+
+	suite.vm.SetDisplay(display)
+	suite.vm.Load([]byte{0x00, 0xE0})
 	suite.vm.run()
 
+	suite.True(m.screenCleared)
 }
 
 func TestChip8TestSuite(t *testing.T) {
