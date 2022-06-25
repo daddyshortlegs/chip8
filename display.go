@@ -6,11 +6,18 @@ type display struct {
 	window *sdl.Window
 }
 
-func (d display) startUp() {
+func (d display) DrawPattern() {
+	d.drawPattern()
+}
+
+func (d display) ClearScreen() {
+	d.clearScreen()
+}
+
+func (d *display) startUp() {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
 	}
-	defer sdl.Quit()
 
 	window, err := sdl.CreateWindow("test", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		640, 320, sdl.WINDOW_SHOWN)
@@ -18,12 +25,13 @@ func (d display) startUp() {
 		panic(err)
 	}
 	d.window = window
-	defer d.window.Destroy()
 
-	d.clearScreen()
 	d.drawPattern()
+}
 
-	d.waitForExit()
+func (d display) shutdown() {
+	d.window.Destroy()
+	sdl.Quit()
 }
 
 func (d display) drawPattern() {
@@ -42,7 +50,7 @@ func (d display) clearScreen() {
 	d.window.UpdateSurface()
 }
 
-func (d display) waitForExit() {
+func (d display) WaitForExit() {
 	running := true
 	for running {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -62,6 +70,8 @@ func (d display) drawPoint(surface *sdl.Surface, x int32, y int32) {
 }
 
 func (d display) getSurface() *sdl.Surface {
+
+	println("d.window = ", d.window)
 	surface, err := d.window.GetSurface()
 	if err != nil {
 		panic(err)

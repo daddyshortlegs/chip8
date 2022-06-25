@@ -54,7 +54,7 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 	suite.vm = Chip8vm{}
 	data := []byte{0x60, 0x11, 0x61, 0x12, 0x65, 0xCC}
 	suite.vm.Load(data)
-	suite.vm.run()
+	suite.vm.Run()
 
 	suite.Equal(byte(0x11), suite.vm.registers[0])
 	suite.Equal(byte(0x12), suite.vm.registers[1])
@@ -64,7 +64,7 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 func (suite *Chip8TestSuite) executeInstruction(data []byte) {
 	suite.vm = Chip8vm{}
 	suite.vm.Load(data)
-	suite.vm.run()
+	suite.vm.Run()
 }
 
 func (suite *Chip8TestSuite) TestAddToRegister() {
@@ -109,7 +109,7 @@ func (suite *Chip8TestSuite) TestClearScreen() {
 
 	suite.vm.SetDisplay(display)
 	suite.vm.Load([]byte{0x00, 0xE0})
-	suite.vm.run()
+	suite.vm.Run()
 
 	suite.True(m.screenCleared)
 }

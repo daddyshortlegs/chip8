@@ -15,6 +15,7 @@ type Chip8vm struct {
 
 type Display interface {
 	ClearScreen()
+	DrawPattern()
 }
 
 func (v *Chip8vm) SetDisplay(d Display) {
@@ -25,7 +26,7 @@ func (v *Chip8vm) Load(bytes []byte) {
 	copy(v.memory[:], bytes)
 }
 
-func (v *Chip8vm) run() {
+func (v *Chip8vm) Run() {
 	var firstByte byte
 	var theInstruction int
 	for {
