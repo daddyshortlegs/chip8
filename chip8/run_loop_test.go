@@ -96,6 +96,11 @@ type mockDisplay struct {
 	screenCleared bool
 }
 
+func (m *mockDisplay) DrawPattern() {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *mockDisplay) ClearScreen() {
 	m.screenCleared = true
 }

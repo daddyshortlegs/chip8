@@ -1,29 +1,17 @@
 package chip8
 
-const (
-	ClearScreen = iota
-	Jump
-	SetRegister
-	AddValueToRegister
-	SetIndexRegister
-	DisplayDraw
-)
+type instruction struct {
+	first  byte
+	second byte
+}
 
-func decodeInstruction(instr instruction) int {
-	if instr.first == 0x00 && instr.second == 0xE0 {
-		return ClearScreen
-	}
+type Instruction interface {
+	Execute()
+}
 
-	mask := byte(0b11110000)
-	firstNibble := instr.first & mask
+type ClearScreenInstruction struct {
+}
 
-	instructions := map[byte]int{
-		0x10: Jump,
-		0x60: SetRegister,
-		0x70: AddValueToRegister,
-		0xA0: SetIndexRegister,
-		0xD0: DisplayDraw,
-	}
+func Execute(instr instruction) {
 
-	return instructions[firstNibble]
 }

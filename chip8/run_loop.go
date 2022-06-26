@@ -1,16 +1,12 @@
 package chip8
 
-type instruction struct {
-	first  byte
-	second byte
-}
-
 type Chip8vm struct {
-	memory        [4096]byte
-	registers     [16]byte
-	indexRegister uint16
-	pc            uint16
-	d             Display
+	memory                  [4096]byte
+	registers               [16]byte
+	indexRegister           uint16
+	pc                      uint16
+	d                       Display
+	previousInstructionJump bool
 }
 
 type Display interface {
@@ -27,38 +23,47 @@ func (v *Chip8vm) Load(bytes []byte) {
 }
 
 func (v *Chip8vm) Run() {
-	var firstByte byte
-	var theInstruction int
+	v.previousInstructionJump = false
 	for {
 		var instr instruction
-		if theInstruction != Jump {
-			instr = v.fetchAndIncrement()
-		} else {
-			instr = v.fetch()
-		}
+		instr = v.fetchNextInstruction(instr)
 
-		firstByte = instr.first
-		secondByte := instr.second
-
-		theInstruction = decodeInstruction(instr)
-
-		if firstByte == 0x00 && secondByte == 0x00 {
+		if instr.first == 0x00 && instr.second == 0x00 {
 			break
 		}
 
-		switch theInstruction {
-		case ClearScreen:
+		firstNibble := v.getNibble(instr)
+
+		if instr.first == 0x00 && instr.second == 0xE0 {
 			v.d.ClearScreen()
-		case Jump:
-			v.jump(firstByte, secondByte)
-		case SetRegister:
-			v.setRegister(firstByte, secondByte)
-		case AddValueToRegister:
-			v.addToRegister(firstByte, secondByte)
-		case SetIndexRegister:
-			v.setIndexRegister(firstByte, secondByte)
+		} else if firstNibble == 0x10 {
+			v.jump(instr.first, instr.second)
+			v.previousInstructionJump = true
+			continue
+		} else if firstNibble == 0x60 {
+			v.setRegister(instr.first, instr.second)
+		} else if firstNibble == 0x70 {
+			v.addToRegister(instr.first, instr.second)
+		} else if firstNibble == 0xA0 {
+			v.setIndexRegister(instr.first, instr.second)
 		}
+		v.previousInstructionJump = false
 	}
+}
+
+func (v *Chip8vm) fetchNextInstruction(instr instruction) instruction {
+	if v.previousInstructionJump == false {
+		instr = v.fetchAndIncrement()
+	} else {
+		instr = v.fetch()
+	}
+	return instr
+}
+
+func (v *Chip8vm) getNibble(instr instruction) byte {
+	mask := byte(0b11110000)
+	firstNibble := instr.first & mask
+	return firstNibble
 }
 
 func (v *Chip8vm) fetch() instruction {
