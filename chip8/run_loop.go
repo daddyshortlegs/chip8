@@ -25,70 +25,68 @@ func (v *Chip8vm) Load(bytes []byte) {
 func (v *Chip8vm) Run() {
 	v.previousInstructionJump = false
 	for {
-		var instr instruction
-		instr = v.fetchNextInstruction(instr)
+		instr := v.fetchNextInstruction()
 
-		if instr.first == 0x00 && instr.second == 0x00 {
+		if instr == 0x0000 {
 			break
 		}
 
-		firstNibble := v.getNibble(instr)
+		firstNibble := extractNibble(instr)
 
-		if instr.first == 0x00 && instr.second == 0xE0 {
+		if instr == 0x00E0 {
 			v.d.ClearScreen()
 		} else if firstNibble == 0x10 {
-			v.jump(instr.first, instr.second)
+			println("jumping")
+			v.jump(instr)
 			v.previousInstructionJump = true
 			continue
 		} else if firstNibble == 0x60 {
-			v.setRegister(instr.first, instr.second)
+			v.setRegister(instr)
 		} else if firstNibble == 0x70 {
-			v.addToRegister(instr.first, instr.second)
+			v.addToRegister(instr)
 		} else if firstNibble == 0xA0 {
-			v.setIndexRegister(instr.first, instr.second)
+			v.setIndexRegister(instr)
 		}
 		v.previousInstructionJump = false
 	}
 }
 
-func (v *Chip8vm) fetchNextInstruction(instr instruction) instruction {
+func (v *Chip8vm) fetchNextInstruction() uint16 {
 	if v.previousInstructionJump == false {
-		instr = v.fetchAndIncrement()
-	} else {
-		instr = v.fetch()
+		return v.fetchAndIncrement()
 	}
-	return instr
+	return v.fetch()
 }
 
-func (v *Chip8vm) getNibble(instr instruction) byte {
-	mask := byte(0b11110000)
-	firstNibble := instr.first & mask
-	return firstNibble
-}
-
-func (v *Chip8vm) fetch() instruction {
-	i := instruction{v.memory[v.pc], v.memory[v.pc+1]}
+func (v *Chip8vm) fetch() uint16 {
+	i := bytesToWord(v.memory[v.pc], v.memory[v.pc+1])
 	return i
 }
 
-func (v *Chip8vm) fetchAndIncrement() instruction {
-	i := instruction{v.memory[v.pc], v.memory[v.pc+1]}
+func (v *Chip8vm) fetchAndIncrement() uint16 {
+	i := bytesToWord(v.memory[v.pc], v.memory[v.pc+1])
 	v.pc += 2
 	return i
 }
 
-func (v *Chip8vm) setRegister(firstByte byte, secondByte byte) {
-	v.registers[extractNibble(firstByte)] = secondByte
+func (v *Chip8vm) setRegister(instr uint16) {
+	secondByte := extractSecondByte(instr)
+	firstByte := extractFirstByte(instr)
+	nibble := v.getRightNibble(firstByte)
+	v.registers[nibble] = secondByte
 }
 
-func (v *Chip8vm) addToRegister(firstByte byte, secondByte byte) {
-	v.registers[extractNibble(firstByte)] += secondByte
+func (v *Chip8vm) addToRegister(instr uint16) {
+	secondByte := extractSecondByte(instr)
+	firstByte := extractFirstByte(instr)
+	nibble := v.getRightNibble(firstByte)
+	v.registers[nibble] += secondByte
 }
 
-func (v *Chip8vm) setIndexRegister(firstByte byte, secondByte byte) {
-	v.indexRegister = extract12BitNumber(firstByte, secondByte)
+func (v *Chip8vm) setIndexRegister(instr uint16) {
+	v.indexRegister = extract12BitNumber(instr)
 }
 
-func (v *Chip8vm) jump(firstByte byte, secondByte byte) {
-	v.pc = extract12BitNumber(firstByte, secondByte)
+func (v *Chip8vm) jump(address uint16) {
+	v.pc = extract12BitNumber(address)
 }

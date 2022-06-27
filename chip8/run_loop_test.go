@@ -20,8 +20,7 @@ func (suite *Chip8TestSuite) TestFetchInstruction() {
 	suite.vm.Load(instruction)
 
 	decoded := suite.vm.fetchAndIncrement()
-	suite.Equal(byte(0x12), decoded.first, "First byte")
-	suite.Equal(byte(0x20), decoded.second, "Second byte")
+	suite.Equal(uint16(0x1220), decoded, "First byte")
 }
 
 func (suite *Chip8TestSuite) TestFetchNextInstruction() {
@@ -32,8 +31,7 @@ func (suite *Chip8TestSuite) TestFetchNextInstruction() {
 
 	decoded := suite.vm.fetchAndIncrement()
 
-	suite.Equal(byte(0x33), decoded.first, "First byte")
-	suite.Equal(byte(0x44), decoded.second, "Second byte")
+	suite.Equal(uint16(0x3344), decoded, "First byte")
 }
 
 func (suite *Chip8TestSuite) TestSetRegisters() {
