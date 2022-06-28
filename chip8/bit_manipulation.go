@@ -6,9 +6,9 @@ func extractNibble(address uint16) byte {
 	return byte(u)
 }
 
-func (v *Chip8vm) getLeftNibble(instr uint16) byte {
+func (v *Chip8vm) getLeftNibble(instr byte) byte {
 	mask := byte(0b11110000)
-	firstNibble := byte(instr>>8) & mask
+	firstNibble := instr & mask
 	return firstNibble >> 4
 }
 

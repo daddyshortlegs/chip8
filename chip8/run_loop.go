@@ -7,6 +7,8 @@ type Chip8vm struct {
 	pc                      uint16
 	d                       Display
 	previousInstructionJump bool
+	xCoord                  byte
+	yCoord                  byte
 }
 
 type Display interface {
@@ -46,6 +48,15 @@ func (v *Chip8vm) Run() {
 			v.addToRegister(instr)
 		} else if firstNibble == 0xA0 {
 			v.setIndexRegister(instr)
+		} else if firstNibble == 0xD0 {
+			firstByte := extractFirstByte(instr)
+			xRegister := v.getRightNibble(firstByte)
+			secondByte := extractSecondByte(instr)
+			yRegister := v.getLeftNibble(secondByte)
+
+			v.xCoord = v.registers[xRegister]
+			v.yCoord = v.registers[yRegister]
+
 		}
 		v.previousInstructionJump = false
 	}
@@ -90,4 +101,12 @@ func (v *Chip8vm) setIndexRegister(instr uint16) {
 
 func (v *Chip8vm) jump(address uint16) {
 	v.pc = extract12BitNumber(address)
+}
+
+func (v *Chip8vm) getXCoordinate() byte {
+	return v.xCoord
+}
+
+func (v *Chip8vm) getYCoordinate() byte {
+	return v.yCoord
 }
