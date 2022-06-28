@@ -70,17 +70,18 @@ func (v *Chip8vm) fetchAndIncrement() uint16 {
 }
 
 func (v *Chip8vm) setRegister(instr uint16) {
-	secondByte := extractSecondByte(instr)
-	firstByte := extractFirstByte(instr)
-	nibble := v.getRightNibble(firstByte)
-	v.registers[nibble] = secondByte
+	nibble := v.getRegisterIndex(instr)
+	v.registers[nibble] = extractSecondByte(instr)
 }
 
 func (v *Chip8vm) addToRegister(instr uint16) {
-	secondByte := extractSecondByte(instr)
+	nibble := v.getRegisterIndex(instr)
+	v.registers[nibble] += extractSecondByte(instr)
+}
+
+func (v *Chip8vm) getRegisterIndex(instr uint16) byte {
 	firstByte := extractFirstByte(instr)
-	nibble := v.getRightNibble(firstByte)
-	v.registers[nibble] += secondByte
+	return v.getRightNibble(firstByte)
 }
 
 func (v *Chip8vm) setIndexRegister(instr uint16) {
