@@ -39,7 +39,7 @@ func extract12BitNumber(address uint16) uint16 {
 	return address & mask
 }
 
-func getValueAtPosition(position int, value byte) byte {
+func GetValueAtPosition(position int, value byte) byte {
 	result := value >> position
 	bitmask := byte(0b00000001)
 	return result & bitmask

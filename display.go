@@ -1,6 +1,9 @@
 package main
 
-import "github.com/veandco/go-sdl2/sdl"
+import (
+	"chip8"
+	"github.com/veandco/go-sdl2/sdl"
+)
 
 type display struct {
 	window *sdl.Window
@@ -35,12 +38,40 @@ func (d display) shutdown() {
 }
 
 func (d display) drawPattern() {
+	d.drawLetter(0, 0)
+}
+
+func (d display) drawLetter(xpos byte, ypos byte) {
+	// 0010 0000   0x20
+	// 0110 0000   0x60
+	// 0010 0000   0x20
+	// 0010 0000   0x20
+	// 0111 0000   0x70
+
+	//0xF0, 0x90, 0xF0, 0x90, 0x90
+
+	d.drawByte(0x20, 0, 0)
+	d.drawByte(0x60, 0, 1)
+	d.drawByte(0x20, 0, 2)
+	d.drawByte(0x20, 0, 3)
+	d.drawByte(0x70, 0, 4)
+
+	d.drawByte(0xF0, 6, 0)
+	d.drawByte(0x90, 6, 1)
+	d.drawByte(0xF0, 6, 2)
+	d.drawByte(0x90, 6, 3)
+	d.drawByte(0x90, 6, 4)
+}
+
+func (d display) drawByte(value byte, xpos byte, ypos byte) {
 	surface := d.getSurface()
 
-	d.drawPoint(surface, 0, 0)
-	d.drawPoint(surface, 1, 1)
-	d.drawPoint(surface, 2, 2)
-
+	for index := 7; index >= 0; index-- {
+		bit7 := chip8.GetValueAtPosition(index, value)
+		if bit7 == 1 {
+			d.drawPoint(surface, xpos+(7-byte(index)), ypos)
+		}
+	}
 	d.window.UpdateSurface()
 }
 
@@ -64,13 +95,12 @@ func (d display) WaitForExit() {
 	}
 }
 
-func (d display) drawPoint(surface *sdl.Surface, x int32, y int32) {
-	rect := sdl.Rect{x * 10, y * 10, 9, 9}
+func (d display) drawPoint(surface *sdl.Surface, x byte, y byte) {
+	rect := sdl.Rect{int32(x * 10), int32(y * 10), 10, 10}
 	surface.FillRect(&rect, 0x00fffff0)
 }
 
 func (d display) getSurface() *sdl.Surface {
-
 	println("d.window = ", d.window)
 	surface, err := d.window.GetSurface()
 	if err != nil {
