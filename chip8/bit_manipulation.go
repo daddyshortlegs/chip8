@@ -31,11 +31,16 @@ func extractSecondByte(address uint16) byte {
 
 func bytesToWord(firstByte byte, secondByte byte) uint16 {
 	shiftedBytes := uint16(firstByte) << 8
-	result := shiftedBytes | uint16(secondByte)
-	return result
+	return shiftedBytes | uint16(secondByte)
 }
 
 func extract12BitNumber(address uint16) uint16 {
 	mask := uint16(0b0000111111111111)
 	return address & mask
+}
+
+func getValueAtPosition(position int, value byte) byte {
+	result := value >> position
+	bitmask := byte(0b00000001)
+	return result & bitmask
 }
