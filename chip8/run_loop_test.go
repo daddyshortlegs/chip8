@@ -129,6 +129,18 @@ func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 	suite.Equal(byte(30), suite.vm.getYCoordinate())
 }
 
+func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
+	suite.vm = Chip8vm{}
+	suite.vm.registers[5] = 64
+	suite.vm.registers[10] = 32
+	suite.vm.Load([]byte{0xD5, 0xA0})
+
+	suite.vm.Run()
+
+	suite.Equal(byte(0), suite.vm.getXCoordinate())
+	suite.Equal(byte(0), suite.vm.getYCoordinate())
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }

@@ -54,8 +54,8 @@ func (v *Chip8vm) Run() {
 			secondByte := extractSecondByte(instr)
 			yRegister := v.getLeftNibble(secondByte)
 
-			v.xCoord = v.registers[xRegister]
-			v.yCoord = v.registers[yRegister]
+			v.xCoord = v.registers[xRegister] & 63
+			v.yCoord = v.registers[yRegister] & 31
 
 		}
 		v.previousInstructionJump = false
