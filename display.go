@@ -9,14 +9,6 @@ type display struct {
 	window *sdl.Window
 }
 
-func (d display) DrawPattern(uint16, byte, byte, byte) {
-	d.drawLetter(0, 0)
-}
-
-func (d display) ClearScreen() {
-	d.clearScreen()
-}
-
 func (d *display) startUp() {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
@@ -29,7 +21,7 @@ func (d *display) startUp() {
 	}
 	d.window = window
 
-	d.drawLetter(0, 0)
+	//d.drawLetter(0, 0)
 }
 
 func (d display) shutdown() {
@@ -37,26 +29,10 @@ func (d display) shutdown() {
 	sdl.Quit()
 }
 
-func (d display) drawLetter(xpos byte, ypos byte) {
-	// 0010 0000   0x20
-	// 0110 0000   0x60
-	// 0010 0000   0x20
-	// 0010 0000   0x20
-	// 0111 0000   0x70
-
-	//0xF0, 0x90, 0xF0, 0x90, 0x90
-
-	d.drawByte(0x20, 0, 0)
-	d.drawByte(0x60, 0, 1)
-	d.drawByte(0x20, 0, 2)
-	d.drawByte(0x20, 0, 3)
-	d.drawByte(0x70, 0, 4)
-
-	d.drawByte(0xF0, 6, 0)
-	d.drawByte(0x90, 6, 1)
-	d.drawByte(0xF0, 6, 2)
-	d.drawByte(0x90, 6, 3)
-	d.drawByte(0x90, 6, 4)
+func (d display) ClearScreen() {
+	surface := d.getSurface()
+	surface.FillRect(nil, 0)
+	d.window.UpdateSurface()
 }
 
 func (d display) drawByte(value byte, xpos byte, ypos byte) {
@@ -71,10 +47,13 @@ func (d display) drawByte(value byte, xpos byte, ypos byte) {
 	d.window.UpdateSurface()
 }
 
-func (d display) clearScreen() {
-	surface := d.getSurface()
-	surface.FillRect(nil, 0)
-	d.window.UpdateSurface()
+func (d display) DrawPattern(chip8 *chip8.Chip8vm, address uint16, numberOfBytes byte, x byte, y byte) {
+	yPos := y
+	for start := address; start < address+uint16(numberOfBytes); start++ {
+		value := chip8.Memory[start]
+		d.drawByte(value, x, yPos)
+		yPos++
+	}
 }
 
 func (d display) WaitForExit() {

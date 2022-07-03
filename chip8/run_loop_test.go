@@ -131,7 +131,7 @@ func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
 }
 
 func (suite *Chip8TestSuite) TestInitialMemoryContainsFont() {
-	bytes := suite.vm.memory[0x50:0x09F]
+	bytes := suite.vm.Memory[0x50:0x09F]
 	suite.Equal(byte(0xF0), bytes[0], "First byte")
 	suite.Equal(byte(0x90), bytes[1], "Second byte")
 	suite.Equal(byte(0x80), bytes[len(bytes)-1], "last byte")
@@ -140,7 +140,7 @@ func (suite *Chip8TestSuite) TestInitialMemoryContainsFont() {
 func (suite *Chip8TestSuite) TestLoadPlacesCodeAtCorrectPlace() {
 	suite.vm.Load([]byte{0xD5, 0xA0})
 
-	bytes := suite.vm.memory[0x200:]
+	bytes := suite.vm.Memory[0x200:]
 	suite.Equal(byte(0xD5), bytes[0], "First byte")
 	suite.Equal(byte(0xA0), bytes[1], "Second byte")
 }

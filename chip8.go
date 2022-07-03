@@ -11,10 +11,35 @@ func main() {
 	display = theDisplay
 
 	vm := chip8.Chip8vm{}
+	vm.Init()
 	vm.SetDisplay(display)
-	display.DrawPattern(0, 0, 0, 0)
-	instruction := []byte{0x00, 0xD0}
-	vm.Load(instruction)
+	vm.Load([]byte{
+		0x60, 0x00, // Set register 0 to 0x00
+		0x61, 0x00, // Set register 1 to 0x00
+
+		0x62, 0x05, // Set register 2 to 0x05
+		0x63, 0x00, // Set register 3 to 0x00
+
+		0x64, 0x0A, // Set register 4 to 10
+		0x65, 0x00, // Set register 5 to 0x00
+
+		0x66, 0x0F, // Set register 6 to 15
+		0x67, 0x00, // Set register 7 to 0x00
+
+		0x68, 0x14, // Set register 8 to 20
+		0x69, 0x00, // Set register 9 to 0x00
+
+		0xA0, 0x50, // Set Index Register to 0x50
+		0xD0, 0x15, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+		0xA0, 0x55, // Set Index Register to 0x55
+		0xD2, 0x35, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+		0xA0, 0x5A, // Set Index Register to 0x55
+		0xD4, 0x55, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+		0xA0, 0x5F, // Set Index Register to 0x5F
+		0xD6, 0x75, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+		0xA0, 0x64, // Set Index Register to 0x5F
+		0xD8, 0x95, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+	})
 	vm.Run()
 
 	//display.ClearScreen()

@@ -1,7 +1,7 @@
 package chip8
 
 type Chip8vm struct {
-	memory                  [4096]byte
+	Memory                  [4096]byte
 	registers               [16]byte
 	indexRegister           uint16
 	pc                      uint16
@@ -13,13 +13,13 @@ type Chip8vm struct {
 
 type Display interface {
 	ClearScreen()
-	DrawPattern(address uint16, numberOfBytes byte, x byte, y byte)
+	DrawPattern(chip8 *Chip8vm, address uint16, numberOfBytes byte, x byte, y byte)
 }
 
 func (v *Chip8vm) Init() {
 	font := createFont()
 	v.pc = 0x200
-	copy(v.memory[0x50:], font)
+	copy(v.Memory[0x50:], font)
 }
 
 func (v *Chip8vm) SetDisplay(d Display) {
@@ -27,7 +27,7 @@ func (v *Chip8vm) SetDisplay(d Display) {
 }
 
 func (v *Chip8vm) Load(bytes []byte) {
-	copy(v.memory[0x200:], bytes)
+	copy(v.Memory[0x200:], bytes)
 }
 
 func (v *Chip8vm) Run() {
@@ -64,7 +64,7 @@ func (v *Chip8vm) Run() {
 			v.xCoord = v.registers[xRegister] & 63
 			v.yCoord = v.registers[yRegister] & 31
 
-			v.d.DrawPattern(v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
+			v.d.DrawPattern(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
 
 		}
 		v.previousInstructionJump = false
@@ -79,12 +79,12 @@ func (v *Chip8vm) fetchNextInstruction() uint16 {
 }
 
 func (v *Chip8vm) fetch() uint16 {
-	i := bytesToWord(v.memory[v.pc], v.memory[v.pc+1])
+	i := bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
 	return i
 }
 
 func (v *Chip8vm) fetchAndIncrement() uint16 {
-	i := bytesToWord(v.memory[v.pc], v.memory[v.pc+1])
+	i := bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
 	v.pc += 2
 	return i
 }
