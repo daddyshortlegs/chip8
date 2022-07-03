@@ -12,7 +12,7 @@ func main() {
 
 	vm := chip8.Chip8vm{}
 	vm.SetDisplay(display)
-	display.DrawPattern(0, 0)
+	display.DrawPattern(0, 0, 0, 0)
 	instruction := []byte{0x00, 0xD0}
 	vm.Load(instruction)
 	vm.Run()

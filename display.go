@@ -9,7 +9,7 @@ type display struct {
 	window *sdl.Window
 }
 
-func (d display) DrawPattern(uint16, int) {
+func (d display) DrawPattern(uint16, byte, byte, byte) {
 	d.drawLetter(0, 0)
 }
 

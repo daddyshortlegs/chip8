@@ -85,21 +85,8 @@ func (suite *Chip8TestSuite) TestSetJumpToAddress() {
 	suite.Equal(uint16(0x300), suite.vm.pc)
 }
 
-type mockDisplay struct {
-	screenCleared bool
-}
-
-func (m *mockDisplay) DrawPattern(uint16, int) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *mockDisplay) ClearScreen() {
-	m.screenCleared = true
-}
-
 func (suite *Chip8TestSuite) TestClearScreen() {
-	m := mockDisplay{false}
+	m := mockDisplay{false, drawPatternValues{}}
 	var display Display
 	display = &m
 
@@ -111,6 +98,11 @@ func (suite *Chip8TestSuite) TestClearScreen() {
 }
 
 func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
+	m := mockDisplay{false, drawPatternValues{}}
+	var display Display
+	display = &m
+	suite.vm.SetDisplay(display)
+
 	suite.vm.registers[5] = 20
 	suite.vm.registers[10] = 30
 	suite.vm.Load([]byte{0xD5, 0xA0})
@@ -122,9 +114,15 @@ func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 }
 
 func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
+	m := mockDisplay{false, drawPatternValues{}}
+	var display Display
+	display = &m
+	suite.vm.SetDisplay(display)
+
 	suite.vm.registers[5] = 64
 	suite.vm.registers[10] = 32
-	suite.vm.Load([]byte{0xD5, 0xA0})
+	suite.vm.indexRegister = 0x200
+	suite.vm.Load([]byte{0xD5, 0xA5})
 
 	suite.vm.Run()
 
@@ -145,6 +143,27 @@ func (suite *Chip8TestSuite) TestLoadPlacesCodeAtCorrectPlace() {
 	bytes := suite.vm.memory[0x200:]
 	suite.Equal(byte(0xD5), bytes[0], "First byte")
 	suite.Equal(byte(0xA0), bytes[1], "Second byte")
+}
+
+func (suite *Chip8TestSuite) TestDraw() {
+	m := mockDisplay{false, drawPatternValues{}}
+	var display Display
+	display = &m
+	suite.vm.SetDisplay(display)
+
+	suite.vm.Load([]byte{
+		0x65, 0x14, // Set register 5 to 0x14 (20)
+		0x6A, 0x1E, // Set register 10 to 0x1E (30)
+		0xA0, 0x50, // Set Index Register to 0x50
+		0xD5, 0xA5, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+	})
+
+	suite.vm.Run()
+
+	suite.Equal(byte(20), m.values.x)
+	suite.Equal(byte(30), m.values.y)
+	suite.Equal(uint16(0x50), m.values.address)
+	suite.Equal(byte(5), m.values.numberOfBytes)
 }
 
 func TestChip8TestSuite(t *testing.T) {

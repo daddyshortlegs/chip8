@@ -13,7 +13,7 @@ type Chip8vm struct {
 
 type Display interface {
 	ClearScreen()
-	DrawPattern(address uint16, numberOfBytes int)
+	DrawPattern(address uint16, numberOfBytes byte, x byte, y byte)
 }
 
 func (v *Chip8vm) Init() {
@@ -59,9 +59,12 @@ func (v *Chip8vm) Run() {
 			xRegister := v.getRightNibble(firstByte)
 			secondByte := extractSecondByte(instr)
 			yRegister := v.getLeftNibble(secondByte)
+			numberOfBytes := v.getRightNibble(secondByte)
 
 			v.xCoord = v.registers[xRegister] & 63
 			v.yCoord = v.registers[yRegister] & 31
+
+			v.d.DrawPattern(v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
 
 		}
 		v.previousInstructionJump = false
