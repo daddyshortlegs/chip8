@@ -13,7 +13,7 @@ type Chip8vm struct {
 
 type Display interface {
 	ClearScreen()
-	DrawPattern()
+	DrawPattern(address uint16, numberOfBytes int)
 }
 
 func (v *Chip8vm) Init() {

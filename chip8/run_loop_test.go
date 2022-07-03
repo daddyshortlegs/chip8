@@ -89,7 +89,7 @@ type mockDisplay struct {
 	screenCleared bool
 }
 
-func (m *mockDisplay) DrawPattern() {
+func (m *mockDisplay) DrawPattern(uint16, int) {
 	//TODO implement me
 	panic("implement me")
 }

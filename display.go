@@ -9,8 +9,8 @@ type display struct {
 	window *sdl.Window
 }
 
-func (d display) DrawPattern() {
-	d.drawPattern()
+func (d display) DrawPattern(uint16, int) {
+	d.drawLetter(0, 0)
 }
 
 func (d display) ClearScreen() {
@@ -29,16 +29,12 @@ func (d *display) startUp() {
 	}
 	d.window = window
 
-	d.drawPattern()
+	d.drawLetter(0, 0)
 }
 
 func (d display) shutdown() {
 	d.window.Destroy()
 	sdl.Quit()
-}
-
-func (d display) drawPattern() {
-	d.drawLetter(0, 0)
 }
 
 func (d display) drawLetter(xpos byte, ypos byte) {
