@@ -14,8 +14,7 @@ func (v *Chip8vm) getLeftNibble(instr byte) byte {
 
 func (v *Chip8vm) getRightNibble(instr byte) byte {
 	mask := byte(0b00001111)
-	firstNibble := instr & mask
-	return firstNibble
+	return instr & mask
 }
 
 func extractFirstByte(address uint16) byte {

@@ -33,30 +33,30 @@ func TestExtract12BitNumber(t *testing.T) {
 }
 
 func TestValueAtPosition0(t *testing.T) {
-	assert.Equal(t, uint8(0), getValueAtPosition(0, 0b0000))
-	assert.Equal(t, uint8(1), getValueAtPosition(0, 0b0001))
-	assert.Equal(t, uint8(0), getValueAtPosition(0, 0b0010))
+	assert.Equal(t, uint8(0), GetValueAtPosition(0, 0b0000))
+	assert.Equal(t, uint8(1), GetValueAtPosition(0, 0b0001))
+	assert.Equal(t, uint8(0), GetValueAtPosition(0, 0b0010))
 }
 
 func TestValueAtPosition1(t *testing.T) {
-	assert.Equal(t, uint8(1), getValueAtPosition(1, 0b0010))
-	assert.Equal(t, uint8(0), getValueAtPosition(1, 0b0001))
-	assert.Equal(t, uint8(0), getValueAtPosition(1, 0b1101))
-	assert.Equal(t, uint8(1), getValueAtPosition(1, 0b1111))
+	assert.Equal(t, uint8(1), GetValueAtPosition(1, 0b0010))
+	assert.Equal(t, uint8(0), GetValueAtPosition(1, 0b0001))
+	assert.Equal(t, uint8(0), GetValueAtPosition(1, 0b1101))
+	assert.Equal(t, uint8(1), GetValueAtPosition(1, 0b1111))
 }
 
 func TestValueAtPosition2(t *testing.T) {
-	assert.Equal(t, uint8(0), getValueAtPosition(2, 0b0000))
-	assert.Equal(t, uint8(0), getValueAtPosition(2, 0b0001))
-	assert.Equal(t, uint8(1), getValueAtPosition(2, 0b0100))
-	assert.Equal(t, uint8(1), getValueAtPosition(2, 0b0110))
-	assert.Equal(t, uint8(0), getValueAtPosition(2, 0b0010))
-	assert.Equal(t, uint8(1), getValueAtPosition(2, 0b1110))
+	assert.Equal(t, uint8(0), GetValueAtPosition(2, 0b0000))
+	assert.Equal(t, uint8(0), GetValueAtPosition(2, 0b0001))
+	assert.Equal(t, uint8(1), GetValueAtPosition(2, 0b0100))
+	assert.Equal(t, uint8(1), GetValueAtPosition(2, 0b0110))
+	assert.Equal(t, uint8(0), GetValueAtPosition(2, 0b0010))
+	assert.Equal(t, uint8(1), GetValueAtPosition(2, 0b1110))
 }
 
 func TestValueAtPosition3(t *testing.T) {
-	assert.Equal(t, uint8(1), getValueAtPosition(3, 0b1000))
-	assert.Equal(t, uint8(0), getValueAtPosition(3, 0b0000))
-	assert.Equal(t, uint8(0), getValueAtPosition(3, 0b0001))
-	assert.Equal(t, uint8(1), getValueAtPosition(3, 0b1111))
+	assert.Equal(t, uint8(1), GetValueAtPosition(3, 0b1000))
+	assert.Equal(t, uint8(0), GetValueAtPosition(3, 0b0000))
+	assert.Equal(t, uint8(0), GetValueAtPosition(3, 0b0001))
+	assert.Equal(t, uint8(1), GetValueAtPosition(3, 0b1111))
 }
