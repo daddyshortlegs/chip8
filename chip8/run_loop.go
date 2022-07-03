@@ -16,17 +16,18 @@ type Display interface {
 	DrawPattern()
 }
 
+func (v *Chip8vm) Init() {
+	font := createFont()
+	v.pc = 0x200
+	copy(v.memory[0x50:], font)
+}
+
 func (v *Chip8vm) SetDisplay(d Display) {
 	v.d = d
 }
 
-func (v *Chip8vm) Init() {
-	font := createFont()
-	copy(v.memory[0x50:], font)
-}
-
 func (v *Chip8vm) Load(bytes []byte) {
-	copy(v.memory[:], bytes)
+	copy(v.memory[0x200:], bytes)
 }
 
 func (v *Chip8vm) Run() {
