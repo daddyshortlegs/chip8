@@ -12,11 +12,11 @@ type Chip8TestSuite struct {
 
 func (suite *Chip8TestSuite) SetupTest() {
 	println("**** setup test")
+	suite.vm = Chip8vm{}
+	suite.vm.Init()
 }
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
 	instruction := []byte{0x12, 0x20}
 	suite.vm.Load(instruction)
 
@@ -25,8 +25,6 @@ func (suite *Chip8TestSuite) TestFetchInstruction() {
 }
 
 func (suite *Chip8TestSuite) TestFetchNextInstruction() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
 	instruction := []byte{0x12, 0x20, 0x33, 0x44}
 	suite.vm.Load(instruction)
 	suite.vm.fetchAndIncrement()
@@ -47,13 +45,9 @@ func (suite *Chip8TestSuite) TestSetRegisters() {
 func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, result int) {
 	suite.executeInstruction(instruction)
 	suite.Equal(byte(result), suite.vm.registers[register])
-
 }
 
 func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
-
 	data := []byte{0x60, 0x11, 0x61, 0x12, 0x65, 0xCC}
 	suite.vm.Load(data)
 	suite.vm.Run()
@@ -109,9 +103,6 @@ func (m *mockDisplay) ClearScreen() {
 }
 
 func (suite *Chip8TestSuite) TestClearScreen() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
-
 	var display Display
 
 	m := mockDisplay{false}
@@ -125,9 +116,6 @@ func (suite *Chip8TestSuite) TestClearScreen() {
 }
 
 func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
-
 	suite.vm.registers[5] = 20
 	suite.vm.registers[10] = 30
 	suite.vm.Load([]byte{0xD5, 0xA0})
@@ -139,7 +127,6 @@ func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 }
 
 func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
-	suite.vm = Chip8vm{}
 	suite.vm.registers[5] = 64
 	suite.vm.registers[10] = 32
 	suite.vm.Load([]byte{0xD5, 0xA0})
@@ -151,9 +138,6 @@ func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
 }
 
 func (suite *Chip8TestSuite) TestInitialMemoryContainsFont() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
-
 	bytes := suite.vm.memory[0x50:0x09F]
 	suite.Equal(byte(0xF0), bytes[0], "First byte")
 	suite.Equal(byte(0x90), bytes[1], "Second byte")
@@ -161,9 +145,6 @@ func (suite *Chip8TestSuite) TestInitialMemoryContainsFont() {
 }
 
 func (suite *Chip8TestSuite) TestLoadPlacesCodeAtCorrectPlace() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
-
 	suite.vm.Load([]byte{0xD5, 0xA0})
 
 	bytes := suite.vm.memory[0x200:]
