@@ -141,6 +141,17 @@ func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
 	suite.Equal(byte(0), suite.vm.getYCoordinate())
 }
 
+func (suite *Chip8TestSuite) TestInitialMemoryContainsFont() {
+	suite.vm = Chip8vm{}
+
+	suite.vm.Init()
+
+	bytes := suite.vm.memory[0x50:0x09F]
+	suite.Equal(byte(0xF0), bytes[0], "First byte")
+	suite.Equal(byte(0x90), bytes[1], "Second byte")
+	suite.Equal(byte(0x80), bytes[len(bytes)-1], "last byte")
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }
