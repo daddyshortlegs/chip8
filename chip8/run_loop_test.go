@@ -11,22 +11,19 @@ type Chip8TestSuite struct {
 }
 
 func (suite *Chip8TestSuite) SetupTest() {
-	println("**** setup test")
 	suite.vm = Chip8vm{}
 	suite.vm.Init()
 }
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
-	instruction := []byte{0x12, 0x20}
-	suite.vm.Load(instruction)
+	suite.vm.Load([]byte{0x12, 0x20})
 
 	decoded := suite.vm.fetchAndIncrement()
 	suite.Equal(uint16(0x1220), decoded, "First byte")
 }
 
 func (suite *Chip8TestSuite) TestFetchNextInstruction() {
-	instruction := []byte{0x12, 0x20, 0x33, 0x44}
-	suite.vm.Load(instruction)
+	suite.vm.Load([]byte{0x12, 0x20, 0x33, 0x44})
 	suite.vm.fetchAndIncrement()
 
 	decoded := suite.vm.fetchAndIncrement()
@@ -48,8 +45,7 @@ func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, 
 }
 
 func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
-	data := []byte{0x60, 0x11, 0x61, 0x12, 0x65, 0xCC}
-	suite.vm.Load(data)
+	suite.vm.Load([]byte{0x60, 0x11, 0x61, 0x12, 0x65, 0xCC})
 	suite.vm.Run()
 
 	suite.Equal(byte(0x11), suite.vm.registers[0])
@@ -103,9 +99,8 @@ func (m *mockDisplay) ClearScreen() {
 }
 
 func (suite *Chip8TestSuite) TestClearScreen() {
-	var display Display
-
 	m := mockDisplay{false}
+	var display Display
 	display = &m
 
 	suite.vm.SetDisplay(display)
