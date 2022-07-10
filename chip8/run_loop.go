@@ -1,5 +1,7 @@
 package chip8
 
+import "fmt"
+
 type Chip8vm struct {
 	Memory                  [4096]byte
 	registers               [16]byte
@@ -13,12 +15,12 @@ type Chip8vm struct {
 
 type Display interface {
 	ClearScreen()
-	DrawPattern(chip8 *Chip8vm, address uint16, numberOfBytes byte, x byte, y byte)
+	DrawSprite(chip8 *Chip8vm, address uint16, numberOfBytes byte, x byte, y byte)
 }
 
 func (v *Chip8vm) Init() {
-	font := createFont()
 	v.pc = 0x200
+	font := createFont()
 	copy(v.Memory[0x50:], font)
 }
 
@@ -40,14 +42,19 @@ func (v *Chip8vm) Run() {
 		}
 
 		firstNibble := extractNibble(instr)
+		firstByte := extractFirstByte(instr)
+		secondByte := extractSecondByte(instr)
+		xRegister := v.getRightNibble(firstByte)
+		yRegister := v.getLeftNibble(secondByte)
 
 		if instr == 0x00E0 {
+			println("ClearScreen")
 			v.d.ClearScreen()
 		} else if firstNibble == 0x10 {
-			println("jumping")
 			v.jump(instr)
 			v.previousInstructionJump = true
-			continue
+			return
+			//continue
 		} else if firstNibble == 0x60 {
 			v.setRegister(instr)
 		} else if firstNibble == 0x70 {
@@ -55,17 +62,16 @@ func (v *Chip8vm) Run() {
 		} else if firstNibble == 0xA0 {
 			v.setIndexRegister(instr)
 		} else if firstNibble == 0xD0 {
-			firstByte := extractFirstByte(instr)
-			xRegister := v.getRightNibble(firstByte)
-			secondByte := extractSecondByte(instr)
-			yRegister := v.getLeftNibble(secondByte)
 			numberOfBytes := v.getRightNibble(secondByte)
 
+			v.xCoord = v.registers[xRegister]
+			v.yCoord = v.registers[yRegister]
 			v.xCoord = v.registers[xRegister] & 63
 			v.yCoord = v.registers[yRegister] & 31
+			v.registers[15] = 0
 
-			v.d.DrawPattern(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
-
+			fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", v.indexRegister, xRegister, yRegister, v.xCoord, v.yCoord, numberOfBytes)
+			v.d.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
 		}
 		v.previousInstructionJump = false
 	}
@@ -91,12 +97,16 @@ func (v *Chip8vm) fetchAndIncrement() uint16 {
 
 func (v *Chip8vm) setRegister(instr uint16) {
 	nibble := v.getRegisterIndex(instr)
-	v.registers[nibble] = extractSecondByte(instr)
+	secondByte := extractSecondByte(instr)
+	fmt.Printf("SetRegister %d to %d\n", nibble, secondByte)
+	v.registers[nibble] = secondByte
 }
 
 func (v *Chip8vm) addToRegister(instr uint16) {
 	nibble := v.getRegisterIndex(instr)
-	v.registers[nibble] += extractSecondByte(instr)
+	secondByte := extractSecondByte(instr)
+	fmt.Printf("Add To Register [%d] value %d\n", nibble, secondByte)
+	v.registers[nibble] += secondByte
 }
 
 func (v *Chip8vm) getRegisterIndex(instr uint16) byte {
@@ -106,10 +116,12 @@ func (v *Chip8vm) getRegisterIndex(instr uint16) byte {
 
 func (v *Chip8vm) setIndexRegister(instr uint16) {
 	v.indexRegister = extract12BitNumber(instr)
+	fmt.Printf("Set Index Register %X\n", v.indexRegister)
 }
 
 func (v *Chip8vm) jump(address uint16) {
 	v.pc = extract12BitNumber(address)
+	fmt.Printf("Jump to %X\n", v.pc)
 }
 
 func (v *Chip8vm) getXCoordinate() byte {

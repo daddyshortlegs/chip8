@@ -2,6 +2,7 @@ package main
 
 import (
 	"chip8"
+	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -35,25 +36,31 @@ func (d display) ClearScreen() {
 	d.window.UpdateSurface()
 }
 
-func (d display) drawByte(value byte, xpos byte, ypos byte) {
-	surface := d.getSurface()
-
-	for index := 7; index >= 0; index-- {
-		bit7 := chip8.GetValueAtPosition(index, value)
-		if bit7 == 1 {
-			d.drawPoint(surface, xpos+(7-byte(index)), ypos)
-		}
-	}
-	d.window.UpdateSurface()
-}
-
-func (d display) DrawPattern(chip8 *chip8.Chip8vm, address uint16, numberOfBytes byte, x byte, y byte) {
+func (d display) DrawSprite(chip8 *chip8.Chip8vm, startAddress uint16, numberOfBytes byte, x byte, y byte) {
 	yPos := y
-	for start := address; start < address+uint16(numberOfBytes); start++ {
-		value := chip8.Memory[start]
+	address := startAddress
+	for n := 0; n < int(numberOfBytes); n++ {
+		value := chip8.Memory[address]
+		address++
 		d.drawByte(value, x, yPos)
 		yPos++
 	}
+}
+
+func (d display) drawByte(value byte, xpos byte, ypos byte) {
+	surface := d.getSurface()
+
+	fmt.Printf("\n")
+
+	for index := 7; index >= 0; index-- {
+		fmt.Printf("Drawing at xpos %d\n", xpos)
+		bit := chip8.GetValueAtPosition(index, value)
+		if bit == 1 {
+			d.drawPoint(surface, xpos, ypos)
+		}
+		xpos += 1
+	}
+	d.window.UpdateSurface()
 }
 
 func (d display) WaitForExit() {
@@ -71,12 +78,11 @@ func (d display) WaitForExit() {
 }
 
 func (d display) drawPoint(surface *sdl.Surface, x byte, y byte) {
-	rect := sdl.Rect{int32(x * 10), int32(y * 10), 10, 10}
+	rect := sdl.Rect{int32(x) * 10, int32(y) * 10, 10, 10}
 	surface.FillRect(&rect, 0x00fffff0)
 }
 
 func (d display) getSurface() *sdl.Surface {
-	println("d.window = ", d.window)
 	surface, err := d.window.GetSurface()
 	if err != nil {
 		panic(err)

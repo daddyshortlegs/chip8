@@ -12,7 +12,7 @@ type drawPatternValues struct {
 	numberOfBytes byte
 }
 
-func (m *mockDisplay) DrawPattern(chip8 *Chip8vm, address uint16, numberOfBytes byte, x byte, y byte) {
+func (m *mockDisplay) DrawSprite(chip8 *Chip8vm, address uint16, numberOfBytes byte, x byte, y byte) {
 	values := drawPatternValues{
 		x, y, address, numberOfBytes,
 	}
