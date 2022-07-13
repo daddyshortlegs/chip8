@@ -69,6 +69,9 @@ func (v *Chip8vm) Run() {
 				v.registers[vx] = v.registers[vy]
 			} else if opcode2 == 1 {
 				v.registers[vx] = v.registers[vx] | v.registers[vy]
+			} else if opcode2 == 2 {
+				v.registers[vx] = v.registers[vx] & v.registers[vy]
+
 			}
 
 		} else if firstNibble == 0xA {
