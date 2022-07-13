@@ -60,16 +60,22 @@ func (v *Chip8vm) Run() {
 		} else if firstNibble == 0x7 {
 			v.addToRegister(instr)
 		} else if firstNibble == 0x8 {
+			secondByte2 := extractSecondByte(instr)
+			opcode2 := v.getRightNibble(secondByte2)
+			vx := v.getRegisterIndex(instr)
+			vy := v.getLeftNibble(secondByte2)
 
-			v.setVXToXY(instr)
+			if opcode2 == 0 {
+				v.registers[vx] = v.registers[vy]
+			} else if opcode2 == 1 {
+				v.registers[vx] = v.registers[vx] | v.registers[vy]
+			}
 
 		} else if firstNibble == 0xA {
 			v.setIndexRegister(instr)
 		} else if firstNibble == 0xD {
 			numberOfBytes := v.getRightNibble(secondByte)
 
-			v.xCoord = v.registers[xRegister]
-			v.yCoord = v.registers[yRegister]
 			v.xCoord = v.registers[xRegister] & 63
 			v.yCoord = v.registers[yRegister] & 31
 			v.registers[15] = 0
@@ -111,14 +117,6 @@ func (v *Chip8vm) addToRegister(instr uint16) {
 	secondByte := extractSecondByte(instr)
 	fmt.Printf("Add To Register [%d] value %d\n", index, secondByte)
 	v.registers[index] += secondByte
-}
-
-func (v *Chip8vm) setVXToXY(instr uint16) {
-	vx := v.getRegisterIndex(instr)
-	secondByte := extractSecondByte(instr)
-	vy := v.getLeftNibble(secondByte)
-
-	v.registers[vx] = v.registers[vy]
 }
 
 func (v *Chip8vm) getRegisterIndex(instr uint16) byte {

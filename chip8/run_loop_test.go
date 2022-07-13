@@ -170,14 +170,22 @@ func (suite *Chip8TestSuite) TestDraw() {
 }
 
 func (suite *Chip8TestSuite) TestVXIsSetToVY() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
-	suite.vm.Load([]byte{
+	suite.executeInstruction([]byte{
 		0x65, 0x14, // Set register 5 to 0x14 (20)
 		0x80, 0x50, // Set register 0 to what's in register 5
 	})
-	suite.vm.Run()
+
 	suite.Equal(byte(0x14), suite.vm.registers[0])
+}
+
+func (suite *Chip8TestSuite) TestVXIsSetToBinaryORofVXVY() {
+	suite.executeInstruction([]byte{
+		0x60, 0x0F, // Set register 0 to 0x0F
+		0x61, 0xF0, // Set register 1 to 0xF0
+		0x80, 0x11, // Set register 0 to what's in register 0 & 1 ORd together
+	})
+
+	suite.Equal(byte(0xFF), suite.vm.registers[0])
 }
 
 func TestChip8TestSuite(t *testing.T) {
