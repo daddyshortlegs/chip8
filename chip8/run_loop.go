@@ -59,6 +59,10 @@ func (v *Chip8vm) Run() {
 			v.setRegister(instr)
 		} else if firstNibble == 0x70 {
 			v.addToRegister(instr)
+		} else if firstNibble == 0x80 {
+
+			v.setVXToXY(instr)
+
 		} else if firstNibble == 0xA0 {
 			v.setIndexRegister(instr)
 		} else if firstNibble == 0xD0 {
@@ -107,6 +111,14 @@ func (v *Chip8vm) addToRegister(instr uint16) {
 	secondByte := extractSecondByte(instr)
 	fmt.Printf("Add To Register [%d] value %d\n", nibble, secondByte)
 	v.registers[nibble] += secondByte
+}
+
+func (v *Chip8vm) setVXToXY(instr uint16) {
+	vx := v.getRegisterIndex(instr)
+	secondByte := extractSecondByte(instr)
+	vy := v.getLeftNibble(secondByte)
+
+	v.registers[vx] = v.registers[vy]
 }
 
 func (v *Chip8vm) getRegisterIndex(instr uint16) byte {

@@ -151,15 +151,11 @@ func (suite *Chip8TestSuite) TestDraw() {
 	display = &m
 	suite.vm.SetDisplay(display)
 
-	instructions1 := setRegisterOpcode(0x05, 0x14)
-	instructions2 := setRegisterOpcode(0x0A, 0x1E)
+	instructions1 := setRegisterOpcode(0x5, 0x14)
+	instructions2 := setRegisterOpcode(0xA, 0x1E)
 	indexInstruction := setIndexRegisterOpcode(0x050)
 	drawInstruction := drawOpcode(0x5, 0xA, 5)
 
-	//otherInstructions := []byte{
-	//	//0xA0, 0x50, // Set Index Register to 0x50
-	//	0xD5, 0xA5, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
-	//}
 	result := append(instructions1, instructions2...)
 	result = append(result, indexInstruction...)
 	result = append(result, drawInstruction...)
@@ -173,16 +169,15 @@ func (suite *Chip8TestSuite) TestDraw() {
 	suite.Equal(byte(5), m.values.numberOfBytes)
 }
 
-// 8XY0
-func (suite *Chip8TestSuite) BlahTestVXIsSetToVY() {
+func (suite *Chip8TestSuite) TestVXIsSetToVY() {
 	suite.vm = Chip8vm{}
 	suite.vm.Init()
 	suite.vm.Load([]byte{
 		0x65, 0x14, // Set register 5 to 0x14 (20)
-		0x80, 0x10,
+		0x80, 0x50, // Set register 0 to what's in register 5
 	})
 	suite.vm.Run()
-	suite.Equal(uint16(0x0A), suite.vm.indexRegister)
+	suite.Equal(byte(0x14), suite.vm.registers[0])
 }
 
 func TestChip8TestSuite(t *testing.T) {
