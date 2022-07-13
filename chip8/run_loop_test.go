@@ -151,12 +151,18 @@ func (suite *Chip8TestSuite) TestDraw() {
 	display = &m
 	suite.vm.SetDisplay(display)
 
-	suite.vm.Load([]byte{
-		0x65, 0x14, // Set register 5 to 0x14 (20)
-		0x6A, 0x1E, // Set register 10 to 0x1E (30)
-		0xA0, 0x50, // Set Index Register to 0x50
+	instructions1 := setRegister(0x05, 0x14)
+	instructions2 := setRegister(0x0A, 0x1E)
+	indexInstruction := setIndexRegister(0x050)
+
+	otherInstructions := []byte{
+		//0xA0, 0x50, // Set Index Register to 0x50
 		0xD5, 0xA5, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
-	})
+	}
+	result := append(instructions1, instructions2...)
+	result = append(result, indexInstruction...)
+	result = append(result, otherInstructions...)
+	suite.vm.Load(result)
 
 	suite.vm.Run()
 
@@ -164,6 +170,48 @@ func (suite *Chip8TestSuite) TestDraw() {
 	suite.Equal(byte(30), m.values.y)
 	suite.Equal(uint16(0x50), m.values.address)
 	suite.Equal(byte(5), m.values.numberOfBytes)
+}
+
+// 8XY0
+func (suite *Chip8TestSuite) BlahTestVXIsSetToVY() {
+	suite.vm = Chip8vm{}
+	suite.vm.Init()
+	suite.vm.Load([]byte{
+		0x65, 0x14, // Set register 5 to 0x14 (20)
+		0x80, 0x10,
+	})
+	suite.vm.Run()
+	suite.Equal(uint16(0x0A), suite.vm.indexRegister)
+}
+
+func (suite *Chip8TestSuite) TestCreateSetRegisterInstruction() {
+	result := setRegister(5, 0x14)
+	suite.Equal([]byte{0x65, 0x14}, result)
+}
+
+func (suite *Chip8TestSuite) TestCreateSetIndexRegisterInstruction() {
+	suite.Equal([]byte{0xA0, 0x14}, setIndexRegister(0x14))
+	suite.Equal([]byte{0xA2, 0x14}, setIndexRegister(0x214))
+}
+
+func setRegister(index byte, value byte) []byte {
+	return createOpcode(byte(0x60), index, value)
+}
+
+func setIndexRegister(value uint16) []byte {
+	mask := uint16(0b0000111111111111)
+	twelveBitValue := value & mask
+
+	leftByte := twelveBitValue >> 8
+	rightByte := byte(twelveBitValue)
+
+	byte1 := 0xA0 | byte(leftByte)
+	return []byte{byte1, rightByte}
+}
+
+func createOpcode(instr byte, index byte, value byte) []byte {
+	result := instr | index
+	return []byte{result, value}
 }
 
 func TestChip8TestSuite(t *testing.T) {
