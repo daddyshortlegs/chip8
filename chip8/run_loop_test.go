@@ -198,6 +198,16 @@ func (suite *Chip8TestSuite) TestVXIsSetToBinaryANDofVXVY() {
 	suite.Equal(byte(0b00000011), suite.vm.registers[0])
 }
 
+func (suite *Chip8TestSuite) TestVXIsSetToBinaryXORofVXVY() {
+	suite.executeInstruction([]byte{
+		0x60, 0b00001111, // Set register 0 to ...
+		0x61, 0b00110011, // Set register 1 to ...
+		0x80, 0x13, // Set register 0 to what's in register 0 & 1 ANDd together
+	})
+
+	suite.Equal(byte(0b00111100), suite.vm.registers[0])
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }
