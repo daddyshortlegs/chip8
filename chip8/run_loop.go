@@ -73,6 +73,18 @@ func (v *Chip8vm) Run() {
 				v.registers[vx] = v.registers[vx] & v.registers[vy]
 			} else if opcode2 == 3 {
 				v.registers[vx] = v.registers[vx] ^ v.registers[vy]
+			} else if opcode2 == 4 {
+				vxRegister := v.registers[vx]
+				vyRegister := v.registers[vy]
+
+				v.registers[vx] = vxRegister + vyRegister
+				var sum uint16
+				sum = uint16(vxRegister) + uint16(vyRegister)
+				if sum > 255 {
+					v.registers[15] = 1
+				} else {
+					v.registers[15] = 0
+				}
 			}
 
 		} else if firstNibble == 0xA {

@@ -208,6 +208,45 @@ func (suite *Chip8TestSuite) TestVXIsSetToBinaryXORofVXVY() {
 	suite.Equal(byte(0b00111100), suite.vm.registers[0])
 }
 
+func (suite *Chip8TestSuite) TestAddWithNoCarry() {
+	suite.executeInstruction([]byte{
+		0x60, 0x0A, // Set register 0 to ...
+		0x61, 0x0A, // Set register 1 to ...
+		0x80, 0x14, // Set register 0 to what's in register 0 + 1
+	})
+
+	suite.Equal(byte(0x14), suite.vm.registers[0])
+	suite.Equal(byte(0), suite.vm.registers[15])
+}
+
+func (suite *Chip8TestSuite) TestAddWithCarry() {
+	suite.executeInstruction([]byte{
+		0x60, 0xFF, // Set register 0 to ...
+		0x61, 0x01, // Set register 1 to ...
+		0x80, 0x14, // Set register 0 to what's in register 0 + 1
+	})
+
+	suite.Equal(byte(0x00), suite.vm.registers[0])
+	suite.Equal(byte(1), suite.vm.registers[15])
+}
+
+func (suite *Chip8TestSuite) TestCarryFlagIsSetTo0AfterPreviousCarry() {
+	suite.vm = Chip8vm{}
+	suite.vm.Init()
+
+	suite.vm.registers[15] = 1
+
+	suite.vm.Load([]byte{
+		0x60, 0x0A, // Set register 0 to ...
+		0x61, 0x0A, // Set register 1 to ...
+		0x80, 0x14, // Set register 0 to what's in register 0 + 1
+	})
+	suite.vm.Run()
+
+	suite.Equal(byte(0x14), suite.vm.registers[0])
+	suite.Equal(byte(0), suite.vm.registers[15])
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }
