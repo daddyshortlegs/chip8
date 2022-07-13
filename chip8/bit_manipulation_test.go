@@ -7,11 +7,11 @@ import (
 
 func TestExtractNibble(t *testing.T) {
 	address := uint16(0x12FF)
-	assert.Equal(t, byte(0x10), extractNibble(address), "")
+	assert.Equal(t, byte(0x1), extractNibble(address), "")
 }
 func TestExtractNibble2(t *testing.T) {
 	address := uint16(0x700A)
-	assert.Equal(t, byte(0x70), extractNibble(address), "")
+	assert.Equal(t, byte(0x7), extractNibble(address), "")
 }
 
 func TestExtractExtractFirstByte(t *testing.T) {

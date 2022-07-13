@@ -2,7 +2,7 @@ package chip8
 
 func extractNibble(address uint16) byte {
 	mask := uint16(0b1111000000000000)
-	u := (address & mask) >> 8
+	u := (address & mask) >> 12
 	return byte(u)
 }
 
