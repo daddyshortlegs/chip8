@@ -41,30 +41,21 @@ func (v *Chip8vm) Run() {
 			break
 		}
 
-		firstNibble := extractNibble(instr)
-		firstByte := extractFirstByte(instr)
-		secondByte := extractSecondByte(instr)
-		xRegister := v.getRightNibble(firstByte)
-		yRegister := v.getLeftNibble(secondByte)
+		opCode, vx, vy, opcode2 := v.extractNibbles(instr)
 
 		if instr == 0x00E0 {
 			println("ClearScreen")
 			v.d.ClearScreen()
-		} else if firstNibble == 0x1 {
+		} else if opCode == 0x1 {
 			v.jump(instr)
 			v.previousInstructionJump = true
-			return
+			return //tenporary until sort out display issue
 			//continue
-		} else if firstNibble == 0x6 {
+		} else if opCode == 0x6 {
 			v.setRegister(instr)
-		} else if firstNibble == 0x7 {
+		} else if opCode == 0x7 {
 			v.addToRegister(instr)
-		} else if firstNibble == 0x8 {
-			secondByte2 := extractSecondByte(instr)
-			opcode2 := v.getRightNibble(secondByte2)
-			vx := v.getRegisterIndex(instr)
-			vy := v.getLeftNibble(secondByte2)
-
+		} else if opCode == 0x8 {
 			if opcode2 == 0 {
 				v.registers[vx] = v.registers[vy]
 			} else if opcode2 == 1 {
@@ -87,20 +78,29 @@ func (v *Chip8vm) Run() {
 				}
 			}
 
-		} else if firstNibble == 0xA {
+		} else if opCode == 0xA {
 			v.setIndexRegister(instr)
-		} else if firstNibble == 0xD {
-			numberOfBytes := v.getRightNibble(secondByte)
+		} else if opCode == 0xD {
+			numberOfBytes := opcode2
 
-			v.xCoord = v.registers[xRegister] & 63
-			v.yCoord = v.registers[yRegister] & 31
+			v.xCoord = v.registers[vx] & 63
+			v.yCoord = v.registers[vy] & 31
 			v.registers[15] = 0
 
-			fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", v.indexRegister, xRegister, yRegister, v.xCoord, v.yCoord, numberOfBytes)
+			fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
 			v.d.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
 		}
 		v.previousInstructionJump = false
 	}
+}
+
+func (v *Chip8vm) extractNibbles(instr uint16) (byte, byte, byte, byte) {
+	opCode := extractNibble(instr)
+	vx := v.getRightNibble(extractFirstByte(instr))
+	secondByte := extractSecondByte(instr)
+	vy := v.getLeftNibble(secondByte)
+	opcode2 := v.getRightNibble(secondByte)
+	return opCode, vx, vy, opcode2
 }
 
 func (v *Chip8vm) fetchNextInstruction() uint16 {
