@@ -86,6 +86,17 @@ func (v *Chip8vm) Run() {
 					underflowFlag = 0
 				}
 				v.registers[15] = underflowFlag
+			} else if opcode2 == 7 {
+				vxRegister := v.registers[vx]
+				vyRegister := v.registers[vy]
+				v.registers[vx] = vyRegister - vxRegister
+
+				var underflowFlag byte = 1
+				if vyRegister < vxRegister {
+					underflowFlag = 0
+				}
+				v.registers[15] = underflowFlag
+
 			}
 
 		} else if opCode == 0xA {

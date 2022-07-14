@@ -269,6 +269,28 @@ func (suite *Chip8TestSuite) TestVXSubtractVYUnderflow() {
 	suite.Equal(byte(0), suite.vm.registers[15])
 }
 
+func (suite *Chip8TestSuite) TestVYSubtractVX() {
+	suite.executeInstruction([]byte{
+		0x60, 0x01, // Set register 0 to 1
+		0x61, 0x0A, // Set register 1 to 10
+		0x80, 0x17, // Set VX to 10 - 1
+	})
+
+	suite.Equal(byte(0x09), suite.vm.registers[0])
+	suite.Equal(byte(1), suite.vm.registers[15])
+}
+
+func (suite *Chip8TestSuite) TestVYSubtractVXUnderflow() {
+	suite.executeInstruction([]byte{
+		0x60, 0x0B, // Set register 0 to 11
+		0x61, 0x0A, // Set register 1 to 10
+		0x80, 0x17, // Set VX to 10 - 1
+	})
+
+	suite.Equal(byte(0xFF), suite.vm.registers[0])
+	suite.Equal(byte(0), suite.vm.registers[15])
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }
