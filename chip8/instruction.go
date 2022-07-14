@@ -1,17 +1,14 @@
 package chip8
 
 type instruction struct {
-	first  byte
-	second byte
+	instr uint16
 }
 
-type Instruction interface {
-	Execute()
-}
-
-type ClearScreenInstruction struct {
-}
-
-func Execute(instr instruction) {
-
+func (i instruction) extractNibbles() (byte, byte, byte, byte) {
+	opCode := extractNibble(i.instr)
+	vx := getRightNibble(extractFirstByte(i.instr))
+	secondByte := extractSecondByte(i.instr)
+	vy := getLeftNibble(secondByte)
+	opcode2 := getRightNibble(secondByte)
+	return opCode, vx, vy, opcode2
 }

@@ -41,7 +41,8 @@ func (v *Chip8vm) Run() {
 			break
 		}
 
-		opCode, vx, vy, opcode2 := v.extractNibbles(instr)
+		i := instruction{instr}
+		opCode, vx, vy, opcode2 := i.extractNibbles()
 
 		if instr == 0x00E0 {
 			println("ClearScreen")
@@ -94,15 +95,6 @@ func (v *Chip8vm) Run() {
 	}
 }
 
-func (v *Chip8vm) extractNibbles(instr uint16) (byte, byte, byte, byte) {
-	opCode := extractNibble(instr)
-	vx := v.getRightNibble(extractFirstByte(instr))
-	secondByte := extractSecondByte(instr)
-	vy := v.getLeftNibble(secondByte)
-	opcode2 := v.getRightNibble(secondByte)
-	return opCode, vx, vy, opcode2
-}
-
 func (v *Chip8vm) fetchNextInstruction() uint16 {
 	if v.previousInstructionJump == false {
 		return v.fetchAndIncrement()
@@ -111,8 +103,7 @@ func (v *Chip8vm) fetchNextInstruction() uint16 {
 }
 
 func (v *Chip8vm) fetch() uint16 {
-	i := bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
-	return i
+	return bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
 }
 
 func (v *Chip8vm) fetchAndIncrement() uint16 {
@@ -137,7 +128,7 @@ func (v *Chip8vm) addToRegister(instr uint16) {
 
 func (v *Chip8vm) getRegisterIndex(instr uint16) byte {
 	firstByte := extractFirstByte(instr)
-	return v.getRightNibble(firstByte)
+	return getRightNibble(firstByte)
 }
 
 func (v *Chip8vm) setIndexRegister(instr uint16) {
