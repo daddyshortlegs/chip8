@@ -291,6 +291,18 @@ func (suite *Chip8TestSuite) TestVYSubtractVXUnderflow() {
 	suite.Equal(byte(0), suite.vm.registers[15])
 }
 
+//8XY6
+func (suite *Chip8TestSuite) TestVXShiftRight() {
+	suite.executeInstruction([]byte{
+		0x61, 0b11111110, // Set register 1 to 10
+		0x80, 0x16, // Set VX to VY and shift right
+	})
+
+	suite.Equal(byte(0b11111110), suite.vm.registers[1])
+	suite.Equal(byte(0b01111111), suite.vm.registers[0])
+	suite.Equal(byte(0), suite.vm.registers[15])
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }
