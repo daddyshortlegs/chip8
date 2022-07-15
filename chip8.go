@@ -53,5 +53,4 @@ func main() {
 	vm.Run()
 
 	//display.ClearScreen()
-	theDisplay.WaitForExit()
 }

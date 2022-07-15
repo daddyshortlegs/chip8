@@ -16,6 +16,7 @@ type Chip8vm struct {
 type Display interface {
 	ClearScreen()
 	DrawSprite(chip8 *Chip8vm, address uint16, numberOfBytes byte, x byte, y byte)
+	PollEvents() bool
 }
 
 func (v *Chip8vm) Init() {
@@ -50,64 +51,13 @@ func (v *Chip8vm) Run() {
 		} else if opCode == 0x1 {
 			v.jump(instr)
 			v.previousInstructionJump = true
-			return //tenporary until sort out display issue
 			//continue
 		} else if opCode == 0x6 {
 			v.setRegister(instr)
 		} else if opCode == 0x7 {
 			v.addToRegister(instr)
 		} else if opCode == 0x8 {
-			if opcode2 == 0 {
-				v.registers[vx] = v.registers[vy]
-			} else if opcode2 == 1 {
-				v.registers[vx] = v.registers[vx] | v.registers[vy]
-			} else if opcode2 == 2 {
-				v.registers[vx] = v.registers[vx] & v.registers[vy]
-			} else if opcode2 == 3 {
-				v.registers[vx] = v.registers[vx] ^ v.registers[vy]
-			} else if opcode2 == 4 {
-				vxRegister := v.registers[vx]
-				vyRegister := v.registers[vy]
-
-				v.registers[vx] = vxRegister + vyRegister
-				var sum uint16
-				sum = uint16(vxRegister) + uint16(vyRegister)
-				if sum > 255 {
-					v.registers[15] = 1
-				} else {
-					v.registers[15] = 0
-				}
-			} else if opcode2 == 5 {
-				vxRegister := v.registers[vx]
-				vyRegister := v.registers[vy]
-				v.registers[vx] = vxRegister - vyRegister
-				var underflowFlag byte = 1
-				if vxRegister < vyRegister {
-					underflowFlag = 0
-				}
-				v.registers[15] = underflowFlag
-			} else if opcode2 == 6 {
-				overflow := v.registers[vy] & 0b00000001
-				v.registers[15] = overflow
-				v.registers[vx] = v.registers[vy] >> 1
-			} else if opcode2 == 7 {
-				vxRegister := v.registers[vx]
-				vyRegister := v.registers[vy]
-				v.registers[vx] = vyRegister - vxRegister
-
-				var underflowFlag byte = 1
-				if vyRegister < vxRegister {
-					underflowFlag = 0
-				}
-				v.registers[15] = underflowFlag
-
-			} else if opcode2 == 0xE {
-				overflow := v.registers[vy] & 0b10000000
-				v.registers[15] = overflow >> 7
-				v.registers[vx] = v.registers[vy] << 1
-
-			}
-
+			v.executeOpcode2(opcode2, vx, vy)
 		} else if opCode == 0xA {
 			v.setIndexRegister(instr)
 		} else if opCode == 0xD {
@@ -119,8 +69,65 @@ func (v *Chip8vm) Run() {
 
 			fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
 			v.d.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
+		} else {
+			v.previousInstructionJump = false
 		}
-		v.previousInstructionJump = false
+		quit := v.d.PollEvents()
+		if quit == false {
+			return
+		}
+	}
+}
+
+func (v *Chip8vm) executeOpcode2(opcode2 byte, vx byte, vy byte) {
+	if opcode2 == 0 {
+		v.registers[vx] = v.registers[vy]
+	} else if opcode2 == 1 {
+		v.registers[vx] = v.registers[vx] | v.registers[vy]
+	} else if opcode2 == 2 {
+		v.registers[vx] = v.registers[vx] & v.registers[vy]
+	} else if opcode2 == 3 {
+		v.registers[vx] = v.registers[vx] ^ v.registers[vy]
+	} else if opcode2 == 4 {
+		vxRegister := v.registers[vx]
+		vyRegister := v.registers[vy]
+
+		v.registers[vx] = vxRegister + vyRegister
+		var sum uint16
+		sum = uint16(vxRegister) + uint16(vyRegister)
+		if sum > 255 {
+			v.registers[15] = 1
+		} else {
+			v.registers[15] = 0
+		}
+	} else if opcode2 == 5 {
+		vxRegister := v.registers[vx]
+		vyRegister := v.registers[vy]
+		v.registers[vx] = vxRegister - vyRegister
+		var underflowFlag byte = 1
+		if vxRegister < vyRegister {
+			underflowFlag = 0
+		}
+		v.registers[15] = underflowFlag
+	} else if opcode2 == 6 {
+		overflow := v.registers[vy] & 0b00000001
+		v.registers[15] = overflow
+		v.registers[vx] = v.registers[vy] >> 1
+	} else if opcode2 == 7 {
+		vxRegister := v.registers[vx]
+		vyRegister := v.registers[vy]
+		v.registers[vx] = vyRegister - vxRegister
+
+		var underflowFlag byte = 1
+		if vyRegister < vxRegister {
+			underflowFlag = 0
+		}
+		v.registers[15] = underflowFlag
+
+	} else if opcode2 == 0xE {
+		overflow := v.registers[vy] & 0b10000000
+		v.registers[15] = overflow >> 7
+		v.registers[vx] = v.registers[vy] << 1
 	}
 }
 
@@ -167,7 +174,7 @@ func (v *Chip8vm) setIndexRegister(instr uint16) {
 
 func (v *Chip8vm) jump(address uint16) {
 	v.pc = extract12BitNumber(address)
-	fmt.Printf("Jump to %X\n", v.pc)
+	//fmt.Printf("Jump to %X\n", v.pc)
 }
 
 func (v *Chip8vm) getXCoordinate() byte {

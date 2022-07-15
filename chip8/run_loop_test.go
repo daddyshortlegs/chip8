@@ -12,6 +12,12 @@ type Chip8TestSuite struct {
 
 func (suite *Chip8TestSuite) SetupTest() {
 	suite.vm = Chip8vm{}
+
+	m := mockDisplay{false, drawPatternValues{}}
+	var display Display
+	display = &m
+
+	suite.vm.SetDisplay(display)
 	suite.vm.Init()
 }
 
@@ -55,6 +61,13 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 
 func (suite *Chip8TestSuite) executeInstruction(data []byte) {
 	suite.vm = Chip8vm{}
+
+	m := mockDisplay{false, drawPatternValues{}}
+	var display Display
+	display = &m
+
+	suite.vm.SetDisplay(display)
+
 	suite.vm.Init()
 	suite.vm.Load(data)
 	suite.vm.Run()
@@ -231,9 +244,6 @@ func (suite *Chip8TestSuite) TestAddWithCarry() {
 }
 
 func (suite *Chip8TestSuite) TestCarryFlagIsSetTo0AfterPreviousCarry() {
-	suite.vm = Chip8vm{}
-	suite.vm.Init()
-
 	suite.vm.registers[15] = 1
 
 	suite.vm.Load([]byte{

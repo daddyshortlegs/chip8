@@ -66,15 +66,19 @@ func (d display) drawByte(value byte, xpos byte, ypos byte) {
 func (d display) WaitForExit() {
 	running := true
 	for running {
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch event.(type) {
-			case *sdl.QuitEvent:
-				println("Quit")
-				running = false
-				break
-			}
+		running = d.PollEvents()
+	}
+}
+
+func (d display) PollEvents() bool {
+	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		switch event.(type) {
+		case *sdl.QuitEvent:
+			println("Quit")
+			return false
 		}
 	}
+	return true
 }
 
 func (d display) drawPoint(surface *sdl.Surface, x byte, y byte) {

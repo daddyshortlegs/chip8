@@ -22,3 +22,7 @@ func (m *mockDisplay) DrawSprite(chip8 *Chip8vm, address uint16, numberOfBytes b
 func (m *mockDisplay) ClearScreen() {
 	m.screenCleared = true
 }
+
+func (m *mockDisplay) PollEvents() bool {
+	return false
+}
