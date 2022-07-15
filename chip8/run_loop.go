@@ -101,6 +101,11 @@ func (v *Chip8vm) Run() {
 				}
 				v.registers[15] = underflowFlag
 
+			} else if opcode2 == 0xE {
+				overflow := v.registers[vy] & 0b10000000
+				v.registers[15] = overflow >> 7
+				v.registers[vx] = v.registers[vy] << 1
+
 			}
 
 		} else if opCode == 0xA {
