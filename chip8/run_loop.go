@@ -69,6 +69,9 @@ func (v *Chip8vm) Run() {
 
 			fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
 			v.display.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
+		} else if opCode == 0xF {
+			character := v.registers[vx]
+			v.indexRegister = 0x50 + uint16(character*5)
 		} else {
 			v.previousInstructionJump = false
 		}
