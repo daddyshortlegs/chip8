@@ -7,7 +7,7 @@ type Chip8vm struct {
 	registers               [16]byte
 	indexRegister           uint16
 	pc                      uint16
-	d                       Display
+	display                 Display
 	previousInstructionJump bool
 	xCoord                  byte
 	yCoord                  byte
@@ -26,7 +26,7 @@ func (v *Chip8vm) Init() {
 }
 
 func (v *Chip8vm) SetDisplay(d Display) {
-	v.d = d
+	v.display = d
 }
 
 func (v *Chip8vm) Load(bytes []byte) {
@@ -47,7 +47,7 @@ func (v *Chip8vm) Run() {
 
 		if instr == 0x00E0 {
 			println("ClearScreen")
-			v.d.ClearScreen()
+			v.display.ClearScreen()
 		} else if opCode == 0x1 {
 			v.jump(instr)
 			v.previousInstructionJump = true
@@ -67,12 +67,12 @@ func (v *Chip8vm) Run() {
 			v.yCoord = v.registers[vy] & 31
 			v.registers[15] = 0
 
-			fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
-			v.d.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
+			fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
+			v.display.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
 		} else {
 			v.previousInstructionJump = false
 		}
-		quit := v.d.PollEvents()
+		quit := v.display.PollEvents()
 		if quit == false {
 			return
 		}
@@ -151,14 +151,14 @@ func (v *Chip8vm) fetchAndIncrement() uint16 {
 func (v *Chip8vm) setRegister(instr uint16) {
 	index := v.getRegisterIndex(instr)
 	secondByte := extractSecondByte(instr)
-	fmt.Printf("SetRegister %d to %d\n", index, secondByte)
+	fmt.Printf("SetRegister %display to %display\n", index, secondByte)
 	v.registers[index] = secondByte
 }
 
 func (v *Chip8vm) addToRegister(instr uint16) {
 	index := v.getRegisterIndex(instr)
 	secondByte := extractSecondByte(instr)
-	fmt.Printf("Add To Register [%d] value %d\n", index, secondByte)
+	fmt.Printf("Add To Register [%display] value %display\n", index, secondByte)
 	v.registers[index] += secondByte
 }
 
