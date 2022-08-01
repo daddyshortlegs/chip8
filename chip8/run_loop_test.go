@@ -392,6 +392,44 @@ func (suite *Chip8TestSuite) TestIndexPointsToCharacterF() {
 	suite.Equal(uint16(FONT_MEMORY+(0x0F*5)), suite.vm.indexRegister)
 }
 
+type MockRandom struct {
+	fakeRandom byte
+}
+
+func (mockRandom MockRandom) Generate() byte {
+	return mockRandom.fakeRandom
+}
+
+func (suite *Chip8TestSuite) TestRandomNumber() {
+	suite.verifyRandomIsStoredInRegister(0xC0, 0xFF, 0x55, 0x55, 0)
+	suite.verifyRandomIsStoredInRegister(0xC1, 0xFF, 0x55, 0x55, 1)
+	suite.verifyRandomIsStoredInRegister(0xC2, 0xEF, 0x55, 0x45, 2)
+}
+
+func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bitmask byte, fakeRandom byte, expected int, expectedRegister int) {
+	suite.vm = Chip8vm{}
+
+	m := mockDisplay{false, drawPatternValues{}, true}
+	var display Display
+	display = &m
+
+	r := MockRandom{fakeRandom}
+	var random Random
+
+	random = r
+
+	suite.vm.SetDisplay(display)
+	suite.vm.SetRandom(random)
+
+	suite.vm.Init()
+	suite.vm.Load([]byte{
+		instruction, bitmask, // Random number into register 0, ANDed with 0xFF
+	})
+	suite.vm.Run()
+
+	suite.Equal(byte(expected), suite.vm.registers[expectedRegister])
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }

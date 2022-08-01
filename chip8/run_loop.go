@@ -11,6 +11,7 @@ type Chip8vm struct {
 	previousInstructionJump bool
 	xCoord                  byte
 	yCoord                  byte
+	random                  Random
 }
 
 type Display interface {
@@ -29,6 +30,10 @@ func (v *Chip8vm) SetDisplay(d Display) {
 	v.display = d
 }
 
+func (v *Chip8vm) SetRandom(random Random) {
+	v.random = random
+}
+
 func (v *Chip8vm) Load(bytes []byte) {
 	copy(v.Memory[0x200:], bytes)
 }
@@ -37,7 +42,6 @@ func (v *Chip8vm) Run() {
 	v.previousInstructionJump = false
 	for {
 		instr := v.fetchNextInstruction()
-
 		if instr == 0x0000 {
 			break
 		}
@@ -60,6 +64,11 @@ func (v *Chip8vm) Run() {
 			v.executeOpcode2(opcode2, vx, vy)
 		} else if opCode == 0xA {
 			v.setIndexRegister(instr)
+		} else if opCode == 0xC {
+			randomNumber := v.random.Generate()
+			index := v.getRegisterIndex(instr)
+			secondByte := extractSecondByte(instr)
+			v.registers[index] = randomNumber & secondByte
 		} else if opCode == 0xD {
 			numberOfBytes := opcode2
 
