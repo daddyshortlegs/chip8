@@ -6,16 +6,11 @@ import (
 )
 
 func main() {
-	theDisplay := Chip8Display{}
-	defer theDisplay.shutdown()
-	theDisplay.startUp()
+	chip8Display := Chip8Display{}
+	defer chip8Display.shutdown()
+	chip8Display.startUp()
 
-	var display chip8.Display
-	display = theDisplay
-
-	vm := chip8.Chip8VM{}
-	vm.Init()
-	vm.SetDisplay(display)
+	vm := chip8.NewChip8VM(chip8Display)
 
 	dat, _ := ioutil.ReadFile("IBM-Logo.ch8")
 	//check(err)

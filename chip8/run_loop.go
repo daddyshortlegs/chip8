@@ -9,14 +9,21 @@ type Chip8VM struct {
 	registers               [16]byte
 	indexRegister           uint16
 	pc                      uint16
-	display                 Display
+	display                 DisplayInterface
 	previousInstructionJump bool
 	xCoord                  byte
 	yCoord                  byte
 	random                  Random
 }
 
-type Display interface {
+func NewChip8VM(display DisplayInterface) *Chip8VM {
+	vm := new(Chip8VM)
+	vm.display = display
+	vm.Init()
+	return vm
+}
+
+type DisplayInterface interface {
 	ClearScreen()
 	DrawSprite(chip8 *Chip8VM, address uint16, numberOfBytes byte, x byte, y byte)
 	PollEvents() bool
@@ -28,7 +35,7 @@ func (v *Chip8VM) Init() {
 	copy(v.Memory[0x50:], font)
 }
 
-func (v *Chip8VM) SetDisplay(d Display) {
+func (v *Chip8VM) SetDisplay(d DisplayInterface) {
 	v.display = d
 }
 

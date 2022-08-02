@@ -23,7 +23,7 @@ func (suite *Chip8TestSuite) SetupTest() {
 	suite.vm = Chip8VM{}
 
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display Display
+	var display DisplayInterface
 	display = &m
 
 	suite.vm.SetDisplay(display)
@@ -72,7 +72,7 @@ func (suite *Chip8TestSuite) executeInstruction(data []byte) {
 	suite.vm = Chip8VM{}
 
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display Display
+	var display DisplayInterface
 	display = &m
 
 	suite.vm.SetDisplay(display)
@@ -109,7 +109,7 @@ func (suite *Chip8TestSuite) TestSetJumpToAddress() {
 
 func (suite *Chip8TestSuite) TestClearScreen() {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display Display
+	var display DisplayInterface
 	display = &m
 
 	suite.vm.SetDisplay(display)
@@ -121,7 +121,7 @@ func (suite *Chip8TestSuite) TestClearScreen() {
 
 func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display Display
+	var display DisplayInterface
 	display = &m
 	suite.vm.SetDisplay(display)
 
@@ -137,7 +137,7 @@ func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 
 func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display Display
+	var display DisplayInterface
 	display = &m
 	suite.vm.SetDisplay(display)
 
@@ -169,7 +169,7 @@ func (suite *Chip8TestSuite) TestLoadPlacesCodeAtCorrectPlace() {
 
 func (suite *Chip8TestSuite) TestDraw() {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display Display
+	var display DisplayInterface
 	display = &m
 	suite.vm.SetDisplay(display)
 
@@ -410,7 +410,7 @@ func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bi
 	suite.vm = Chip8VM{}
 
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display Display
+	var display DisplayInterface
 	display = &m
 
 	r := MockRandom{fakeRandom}
