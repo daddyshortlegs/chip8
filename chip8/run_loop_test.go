@@ -8,6 +8,7 @@ import (
 type Chip8TestSuite struct {
 	suite.Suite
 	vm *Chip8VM
+	m  mockDisplay
 }
 
 const FONT_MEMORY = 0x50
@@ -20,8 +21,8 @@ const ADD_REGISTER_0 = 0x70
 const FONT_REGISTER_0 = 0xF0
 
 func (suite *Chip8TestSuite) SetupTest() {
-	m := mockDisplay{false, drawPatternValues{}, true}
-	suite.vm = NewChip8VM(&m)
+	suite.m = mockDisplay{false, drawPatternValues{}, true}
+	suite.vm = NewChip8VM(&suite.m)
 }
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
@@ -96,19 +97,13 @@ func (suite *Chip8TestSuite) TestSetJumpToAddress() {
 }
 
 func (suite *Chip8TestSuite) TestClearScreen() {
-	m := mockDisplay{false, drawPatternValues{}, true}
-	suite.vm = NewChip8VM(&m)
-
 	suite.vm.Load([]byte{0x00, 0xE0})
 	suite.vm.Run()
 
-	suite.True(m.screenCleared)
+	suite.True(suite.m.screenCleared)
 }
 
 func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
-	m := mockDisplay{false, drawPatternValues{}, true}
-	suite.vm = NewChip8VM(&m)
-
 	suite.vm.registers[5] = 20
 	suite.vm.registers[10] = 30
 	suite.vm.Load([]byte{0xD5, 0xA0})
@@ -120,9 +115,6 @@ func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 }
 
 func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
-	m := mockDisplay{false, drawPatternValues{}, true}
-	suite.vm = NewChip8VM(&m)
-
 	suite.vm.registers[5] = 64
 	suite.vm.registers[10] = 32
 	suite.vm.indexRegister = 0x200
@@ -150,9 +142,6 @@ func (suite *Chip8TestSuite) TestLoadPlacesCodeAtCorrectPlace() {
 }
 
 func (suite *Chip8TestSuite) TestDraw() {
-	m := mockDisplay{false, drawPatternValues{}, true}
-	suite.vm = NewChip8VM(&m)
-
 	instructions1 := setRegisterOpcode(0x5, 0x14)
 	instructions2 := setRegisterOpcode(0xA, 0x1E)
 	indexInstruction := setIndexRegisterOpcode(0x050)
@@ -165,10 +154,10 @@ func (suite *Chip8TestSuite) TestDraw() {
 
 	suite.vm.Run()
 
-	suite.Equal(byte(20), m.values.x)
-	suite.Equal(byte(30), m.values.y)
-	suite.Equal(uint16(0x50), m.values.address)
-	suite.Equal(byte(5), m.values.numberOfBytes)
+	suite.Equal(byte(20), suite.m.values.x)
+	suite.Equal(byte(30), suite.m.values.y)
+	suite.Equal(uint16(0x50), suite.m.values.address)
+	suite.Equal(byte(5), suite.m.values.numberOfBytes)
 }
 
 func (suite *Chip8TestSuite) TestVXIsSetToVY() {

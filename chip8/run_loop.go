@@ -19,7 +19,9 @@ type Chip8VM struct {
 func NewChip8VM(display DisplayInterface) *Chip8VM {
 	vm := new(Chip8VM)
 	vm.display = display
-	vm.Init()
+	vm.pc = 0x200
+	font := createFont()
+	copy(vm.Memory[0x50:], font)
 	return vm
 }
 
@@ -27,16 +29,6 @@ type DisplayInterface interface {
 	ClearScreen()
 	DrawSprite(chip8 *Chip8VM, address uint16, numberOfBytes byte, x byte, y byte)
 	PollEvents() bool
-}
-
-func (v *Chip8VM) Init() {
-	v.pc = 0x200
-	font := createFont()
-	copy(v.Memory[0x50:], font)
-}
-
-func (v *Chip8VM) SetDisplay(d DisplayInterface) {
-	v.display = d
 }
 
 func (v *Chip8VM) SetRandom(random Random) {
