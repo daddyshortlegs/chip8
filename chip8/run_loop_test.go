@@ -430,6 +430,18 @@ func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bi
 	suite.Equal(byte(expected), suite.vm.registers[expectedRegister])
 }
 
+func (suite *Chip8TestSuite) TestDecimalConversion() {
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x7B, // Set register 0 to 123
+		0xA4, 0x00, // Set index register to point to address 0x400 (1024)
+		0xF0, 0x33, // Convert number in register 0 and store in index register
+	})
+
+	suite.Equal(byte(1), suite.vm.Memory[1024])
+	suite.Equal(byte(2), suite.vm.Memory[1025])
+	suite.Equal(byte(3), suite.vm.Memory[1026])
+}
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }

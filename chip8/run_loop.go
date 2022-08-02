@@ -61,7 +61,7 @@ func (v *Chip8vm) Run() {
 		} else if opCode == 0x7 {
 			v.addToRegister(instr)
 		} else if opCode == 0x8 {
-			v.executeOpcode2(opcode2, vx, vy)
+			v.executeArthimeticInstrucions(opcode2, vx, vy)
 		} else if opCode == 0xA {
 			v.setIndexRegister(instr)
 		} else if opCode == 0xC {
@@ -79,8 +79,23 @@ func (v *Chip8vm) Run() {
 			fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
 			v.display.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
 		} else if opCode == 0xF {
-			character := v.registers[vx]
-			v.indexRegister = 0x50 + uint16(character*5)
+
+			secondByte := extractSecondByte(instr)
+
+			if secondByte == 0x33 {
+				value := v.registers[vx]
+				hundreds, tens, ones := splitNumber(value)
+
+				address := v.indexRegister
+				v.Memory[address] = hundreds
+				v.Memory[address+1] = tens
+				v.Memory[address+2] = ones
+
+			} else {
+				character := v.registers[vx]
+				v.indexRegister = 0x50 + uint16(character*5)
+			}
+
 		} else {
 			v.previousInstructionJump = false
 		}
@@ -91,7 +106,14 @@ func (v *Chip8vm) Run() {
 	}
 }
 
-func (v *Chip8vm) executeOpcode2(opcode2 byte, vx byte, vy byte) {
+func splitNumber(number byte) (byte, byte, byte) {
+	hundreds := number / 100
+	tens := (number % 100) / 10
+	ones := number % 10
+	return hundreds, tens, ones
+}
+
+func (v *Chip8vm) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
 	if opcode2 == 0 {
 		v.registers[vx] = v.registers[vy]
 	} else if opcode2 == 1 {
