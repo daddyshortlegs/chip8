@@ -1,8 +1,10 @@
 package chip8
 
-import "fmt"
+import (
+	"fmt"
+)
 
-type Chip8vm struct {
+type Chip8VM struct {
 	Memory                  [4096]byte
 	registers               [16]byte
 	indexRegister           uint16
@@ -16,29 +18,29 @@ type Chip8vm struct {
 
 type Display interface {
 	ClearScreen()
-	DrawSprite(chip8 *Chip8vm, address uint16, numberOfBytes byte, x byte, y byte)
+	DrawSprite(chip8 *Chip8VM, address uint16, numberOfBytes byte, x byte, y byte)
 	PollEvents() bool
 }
 
-func (v *Chip8vm) Init() {
+func (v *Chip8VM) Init() {
 	v.pc = 0x200
 	font := createFont()
 	copy(v.Memory[0x50:], font)
 }
 
-func (v *Chip8vm) SetDisplay(d Display) {
+func (v *Chip8VM) SetDisplay(d Display) {
 	v.display = d
 }
 
-func (v *Chip8vm) SetRandom(random Random) {
+func (v *Chip8VM) SetRandom(random Random) {
 	v.random = random
 }
 
-func (v *Chip8vm) Load(bytes []byte) {
+func (v *Chip8VM) Load(bytes []byte) {
 	copy(v.Memory[0x200:], bytes)
 }
 
-func (v *Chip8vm) Run() {
+func (v *Chip8VM) Run() {
 	v.previousInstructionJump = false
 	for {
 		instr := v.fetchNextInstruction()
@@ -91,7 +93,7 @@ func (v *Chip8vm) Run() {
 				v.Memory[address+1] = tens
 				v.Memory[address+2] = ones
 
-			} else {
+			} else if secondByte == 0x29 {
 				character := v.registers[vx]
 				v.indexRegister = 0x50 + uint16(character*5)
 			}
@@ -113,7 +115,7 @@ func splitNumber(number byte) (byte, byte, byte) {
 	return hundreds, tens, ones
 }
 
-func (v *Chip8vm) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
+func (v *Chip8VM) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
 	if opcode2 == 0 {
 		v.registers[vx] = v.registers[vy]
 	} else if opcode2 == 1 {
@@ -165,56 +167,56 @@ func (v *Chip8vm) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
 	}
 }
 
-func (v *Chip8vm) fetchNextInstruction() uint16 {
+func (v *Chip8VM) fetchNextInstruction() uint16 {
 	if v.previousInstructionJump == false {
 		return v.fetchAndIncrement()
 	}
 	return v.fetch()
 }
 
-func (v *Chip8vm) fetch() uint16 {
+func (v *Chip8VM) fetch() uint16 {
 	return bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
 }
 
-func (v *Chip8vm) fetchAndIncrement() uint16 {
+func (v *Chip8VM) fetchAndIncrement() uint16 {
 	i := bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
 	v.pc += 2
 	return i
 }
 
-func (v *Chip8vm) setRegister(instr uint16) {
+func (v *Chip8VM) setRegister(instr uint16) {
 	index := v.getRegisterIndex(instr)
 	secondByte := extractSecondByte(instr)
 	fmt.Printf("SetRegister %display to %display\n", index, secondByte)
 	v.registers[index] = secondByte
 }
 
-func (v *Chip8vm) addToRegister(instr uint16) {
+func (v *Chip8VM) addToRegister(instr uint16) {
 	index := v.getRegisterIndex(instr)
 	secondByte := extractSecondByte(instr)
 	fmt.Printf("Add To Register [%display] value %display\n", index, secondByte)
 	v.registers[index] += secondByte
 }
 
-func (v *Chip8vm) getRegisterIndex(instr uint16) byte {
+func (v *Chip8VM) getRegisterIndex(instr uint16) byte {
 	firstByte := extractFirstByte(instr)
 	return getRightNibble(firstByte)
 }
 
-func (v *Chip8vm) setIndexRegister(instr uint16) {
+func (v *Chip8VM) setIndexRegister(instr uint16) {
 	v.indexRegister = extract12BitNumber(instr)
 	fmt.Printf("Set Index Register %X\n", v.indexRegister)
 }
 
-func (v *Chip8vm) jump(address uint16) {
+func (v *Chip8VM) jump(address uint16) {
 	v.pc = extract12BitNumber(address)
 	//fmt.Printf("Jump to %X\n", v.pc)
 }
 
-func (v *Chip8vm) getXCoordinate() byte {
+func (v *Chip8VM) getXCoordinate() byte {
 	return v.xCoord
 }
 
-func (v *Chip8vm) getYCoordinate() byte {
+func (v *Chip8VM) getYCoordinate() byte {
 	return v.yCoord
 }

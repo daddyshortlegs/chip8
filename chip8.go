@@ -6,14 +6,14 @@ import (
 )
 
 func main() {
-	theDisplay := display{}
+	theDisplay := Chip8Display{}
 	defer theDisplay.shutdown()
 	theDisplay.startUp()
 
 	var display chip8.Display
 	display = theDisplay
 
-	vm := chip8.Chip8vm{}
+	vm := chip8.Chip8VM{}
 	vm.Init()
 	vm.SetDisplay(display)
 
@@ -52,5 +52,5 @@ func main() {
 	//})
 	vm.Run()
 
-	//display.ClearScreen()
+	//Chip8Display.ClearScreen()
 }

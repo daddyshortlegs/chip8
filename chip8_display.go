@@ -6,11 +6,11 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-type display struct {
+type Chip8Display struct {
 	window *sdl.Window
 }
 
-func (d *display) startUp() {
+func (d *Chip8Display) startUp() {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
 	}
@@ -25,18 +25,18 @@ func (d *display) startUp() {
 	//d.drawLetter(0, 0)
 }
 
-func (d display) shutdown() {
+func (d Chip8Display) shutdown() {
 	d.window.Destroy()
 	sdl.Quit()
 }
 
-func (d display) ClearScreen() {
+func (d Chip8Display) ClearScreen() {
 	surface := d.getSurface()
 	surface.FillRect(nil, 0)
 	d.window.UpdateSurface()
 }
 
-func (d display) DrawSprite(chip8 *chip8.Chip8vm, startAddress uint16, numberOfBytes byte, x byte, y byte) {
+func (d Chip8Display) DrawSprite(chip8 *chip8.Chip8VM, startAddress uint16, numberOfBytes byte, x byte, y byte) {
 	yPos := y
 	address := startAddress
 	for n := 0; n < int(numberOfBytes); n++ {
@@ -47,7 +47,7 @@ func (d display) DrawSprite(chip8 *chip8.Chip8vm, startAddress uint16, numberOfB
 	}
 }
 
-func (d display) drawByte(value byte, xpos byte, ypos byte) {
+func (d Chip8Display) drawByte(value byte, xpos byte, ypos byte) {
 	surface := d.getSurface()
 
 	fmt.Printf("\n")
@@ -63,14 +63,14 @@ func (d display) drawByte(value byte, xpos byte, ypos byte) {
 	d.window.UpdateSurface()
 }
 
-func (d display) WaitForExit() {
+func (d Chip8Display) WaitForExit() {
 	running := true
 	for running {
 		running = d.PollEvents()
 	}
 }
 
-func (d display) PollEvents() bool {
+func (d Chip8Display) PollEvents() bool {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch event.(type) {
 		case *sdl.QuitEvent:
@@ -81,12 +81,12 @@ func (d display) PollEvents() bool {
 	return true
 }
 
-func (d display) drawPoint(surface *sdl.Surface, x byte, y byte) {
+func (d Chip8Display) drawPoint(surface *sdl.Surface, x byte, y byte) {
 	rect := sdl.Rect{int32(x) * 10, int32(y) * 10, 10, 10}
 	surface.FillRect(&rect, 0x00fffff0)
 }
 
-func (d display) getSurface() *sdl.Surface {
+func (d Chip8Display) getSurface() *sdl.Surface {
 	surface, err := d.window.GetSurface()
 	if err != nil {
 		panic(err)

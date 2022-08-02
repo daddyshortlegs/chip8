@@ -7,7 +7,7 @@ import (
 
 type Chip8TestSuite struct {
 	suite.Suite
-	vm Chip8vm
+	vm Chip8VM
 }
 
 const FONT_MEMORY = 0x50
@@ -20,7 +20,7 @@ const ADD_REGISTER_0 = 0x70
 const FONT_REGISTER_0 = 0xF0
 
 func (suite *Chip8TestSuite) SetupTest() {
-	suite.vm = Chip8vm{}
+	suite.vm = Chip8VM{}
 
 	m := mockDisplay{false, drawPatternValues{}, true}
 	var display Display
@@ -69,7 +69,7 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 }
 
 func (suite *Chip8TestSuite) executeInstruction(data []byte) {
-	suite.vm = Chip8vm{}
+	suite.vm = Chip8VM{}
 
 	m := mockDisplay{false, drawPatternValues{}, true}
 	var display Display
@@ -407,7 +407,7 @@ func (suite *Chip8TestSuite) TestRandomNumber() {
 }
 
 func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bitmask byte, fakeRandom byte, expected int, expectedRegister int) {
-	suite.vm = Chip8vm{}
+	suite.vm = Chip8VM{}
 
 	m := mockDisplay{false, drawPatternValues{}, true}
 	var display Display
