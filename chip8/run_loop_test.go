@@ -7,7 +7,7 @@ import (
 
 type Chip8TestSuite struct {
 	suite.Suite
-	vm Chip8VM
+	vm *Chip8VM
 }
 
 const FONT_MEMORY = 0x50
@@ -20,14 +20,8 @@ const ADD_REGISTER_0 = 0x70
 const FONT_REGISTER_0 = 0xF0
 
 func (suite *Chip8TestSuite) SetupTest() {
-	suite.vm = Chip8VM{}
-
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display DisplayInterface
-	display = &m
-
-	suite.vm.SetDisplay(display)
-	suite.vm.Init()
+	suite.vm = NewChip8VM(&m)
 }
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
@@ -69,15 +63,9 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 }
 
 func (suite *Chip8TestSuite) executeInstruction(data []byte) {
-	suite.vm = Chip8VM{}
-
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display DisplayInterface
-	display = &m
+	suite.vm = NewChip8VM(&m)
 
-	suite.vm.SetDisplay(display)
-
-	suite.vm.Init()
 	suite.vm.Load(data)
 	suite.vm.Run()
 }
@@ -109,10 +97,8 @@ func (suite *Chip8TestSuite) TestSetJumpToAddress() {
 
 func (suite *Chip8TestSuite) TestClearScreen() {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display DisplayInterface
-	display = &m
+	suite.vm = NewChip8VM(&m)
 
-	suite.vm.SetDisplay(display)
 	suite.vm.Load([]byte{0x00, 0xE0})
 	suite.vm.Run()
 
@@ -121,9 +107,7 @@ func (suite *Chip8TestSuite) TestClearScreen() {
 
 func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display DisplayInterface
-	display = &m
-	suite.vm.SetDisplay(display)
+	suite.vm = NewChip8VM(&m)
 
 	suite.vm.registers[5] = 20
 	suite.vm.registers[10] = 30
@@ -137,9 +121,7 @@ func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 
 func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display DisplayInterface
-	display = &m
-	suite.vm.SetDisplay(display)
+	suite.vm = NewChip8VM(&m)
 
 	suite.vm.registers[5] = 64
 	suite.vm.registers[10] = 32
@@ -169,9 +151,7 @@ func (suite *Chip8TestSuite) TestLoadPlacesCodeAtCorrectPlace() {
 
 func (suite *Chip8TestSuite) TestDraw() {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display DisplayInterface
-	display = &m
-	suite.vm.SetDisplay(display)
+	suite.vm = NewChip8VM(&m)
 
 	instructions1 := setRegisterOpcode(0x5, 0x14)
 	instructions2 := setRegisterOpcode(0xA, 0x1E)
@@ -407,21 +387,14 @@ func (suite *Chip8TestSuite) TestRandomNumber() {
 }
 
 func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bitmask byte, fakeRandom byte, expected int, expectedRegister int) {
-	suite.vm = Chip8VM{}
-
 	m := mockDisplay{false, drawPatternValues{}, true}
-	var display DisplayInterface
-	display = &m
+	suite.vm = NewChip8VM(&m)
 
 	r := MockRandom{fakeRandom}
-	var random Random
+	var random Random = r
 
-	random = r
-
-	suite.vm.SetDisplay(display)
 	suite.vm.SetRandom(random)
 
-	suite.vm.Init()
 	suite.vm.Load([]byte{
 		instruction, bitmask, // Random number into register 0, ANDed with 0xFF
 	})
