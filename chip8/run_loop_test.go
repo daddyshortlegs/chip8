@@ -7,8 +7,9 @@ import (
 
 type Chip8TestSuite struct {
 	suite.Suite
-	vm *Chip8VM
+	vm *VM
 	m  mockDisplay
+	r  MockRandom
 }
 
 const FONT_MEMORY = 0x50
@@ -22,7 +23,8 @@ const FONT_REGISTER_0 = 0xF0
 
 func (suite *Chip8TestSuite) SetupTest() {
 	suite.m = mockDisplay{false, drawPatternValues{}, true}
-	suite.vm = NewChip8VM(&suite.m)
+	suite.r = MockRandom{55}
+	suite.vm = NewVM(&suite.m, suite.r)
 }
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
@@ -65,7 +67,8 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 
 func (suite *Chip8TestSuite) executeInstruction(data []byte) {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	suite.vm = NewChip8VM(&m)
+	r := MockRandom{55}
+	suite.vm = NewVM(&m, r)
 
 	suite.vm.Load(data)
 	suite.vm.Run()
@@ -377,12 +380,9 @@ func (suite *Chip8TestSuite) TestRandomNumber() {
 
 func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bitmask byte, fakeRandom byte, expected int, expectedRegister int) {
 	m := mockDisplay{false, drawPatternValues{}, true}
-	suite.vm = NewChip8VM(&m)
-
 	r := MockRandom{fakeRandom}
-	var random Random = r
 
-	suite.vm.SetRandom(random)
+	suite.vm = NewVM(&m, r)
 
 	suite.vm.Load([]byte{
 		instruction, bitmask, // Random number into register 0, ANDed with 0xFF

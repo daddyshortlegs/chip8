@@ -3,6 +3,7 @@ package main
 import (
 	"chip8"
 	"io/ioutil"
+	"time"
 )
 
 func main() {
@@ -10,7 +11,9 @@ func main() {
 	defer chip8Display.shutdown()
 	chip8Display.startUp()
 
-	vm := chip8.NewChip8VM(chip8Display)
+	nano := time.Now().UnixNano()
+	random := chip8.PseudoRandom{Seed: nano}
+	vm := chip8.NewVM(chip8Display, random)
 
 	dat, _ := ioutil.ReadFile("IBM-Logo.ch8")
 	//check(err)
