@@ -451,7 +451,6 @@ func (suite *Chip8TestSuite) TestSkipsWhenVxAndVyAreEqual() {
 		0x50, 0x10})
 	suite.Equal(uint16(0x20A), suite.vm.pc)
 }
-
 func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreNotEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
 	suite.executeInstruction([]byte{
@@ -461,12 +460,29 @@ func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreNotEqual() {
 	suite.Equal(uint16(0x208), suite.vm.pc)
 }
 
+func (suite *Chip8TestSuite) TestSkipsWhenVxAndVyAreNotEqual() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x15,
+		SET_REGISTER_1, 0x25,
+		0x90, 0x10})
+	suite.Equal(uint16(0x20A), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreEqual() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x25,
+		SET_REGISTER_1, 0x25,
+		0x90, 0x10})
+	suite.Equal(uint16(0x208), suite.vm.pc)
+}
+
 /*
 TODO:
 
 
 00EE and 2NNN: Subroutines
-3XNN, 4XNN, 5XY0 and 9XY0: Skip
 BNNN: Jump with offset
 EX9E and EXA1: Skip if key
 FX07, FX15 and FX18: Timers
