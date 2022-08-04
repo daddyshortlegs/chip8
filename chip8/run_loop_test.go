@@ -427,6 +427,22 @@ func (suite *Chip8TestSuite) TestDoesNotSkipIfNotEqualToRegister() {
 	suite.Equal(uint16(0x206), suite.vm.pc)
 }
 
+func (suite *Chip8TestSuite) TestDoesSkipIfNotEqualToRegister() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x11,
+		0x40, 0x22})
+	suite.Equal(uint16(0x208), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestDoesNotSkipIfEqualToRegister() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x33,
+		0x40, 0x33})
+	suite.Equal(uint16(0x206), suite.vm.pc)
+}
+
 /*
 TODO:
 
