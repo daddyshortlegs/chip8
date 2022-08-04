@@ -404,6 +404,45 @@ func (suite *Chip8TestSuite) TestDecimalConversion() {
 	suite.Equal(byte(3), suite.vm.Memory[1026])
 }
 
+func (suite *Chip8TestSuite) TestDoesSkipIfEqual() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		0x30, 0x00})
+	suite.Equal(uint16(0x206), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestDoesSkipIfEqualToRegister() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x11,
+		0x30, 0x11})
+	suite.Equal(uint16(0x208), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestDoesNotSkipIfNotEqualToRegister() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x11,
+		0x30, 0x22})
+	suite.Equal(uint16(0x206), suite.vm.pc)
+}
+
+/*
+TODO:
+
+
+00EE and 2NNN: Subroutines
+3XNN, 4XNN, 5XY0 and 9XY0: Skip
+BNNN: Jump with offset
+EX9E and EXA1: Skip if key
+FX07, FX15 and FX18: Timers
+FX1E: Add to index
+FX0A: Get key
+FX55 and FX65: Store and load memoryPermalink
+
+
+*/
+
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
 }

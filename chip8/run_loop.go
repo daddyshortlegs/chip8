@@ -54,6 +54,10 @@ func (v *VM) Run() {
 			v.jump(instr)
 			v.previousInstructionJump = true
 			//continue
+		} else if opCode == 0x3 {
+			if v.registers[vx] == extractSecondByte(instr) {
+				v.pc += 2
+			}
 		} else if opCode == 0x6 {
 			v.setRegister(instr)
 		} else if opCode == 0x7 {
@@ -112,27 +116,36 @@ func splitNumber(number byte) (byte, byte, byte) {
 }
 
 func (v *VM) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
-	if opcode2 == 0 {
+	const setVxToVy = 0x0
+	const binaryOr = 0x1
+	const binaryAnd = 0x2
+	const logicalXor = 0x3
+	const addToVx = 0x4
+	const subtractFromVx = 0x5
+	const shiftRight = 0x6
+	const subtractFromVy = 0x7
+	const shiftLeft = 0xE
+
+	if opcode2 == setVxToVy {
 		v.registers[vx] = v.registers[vy]
-	} else if opcode2 == 1 {
+	} else if opcode2 == binaryOr {
 		v.registers[vx] = v.registers[vx] | v.registers[vy]
-	} else if opcode2 == 2 {
+	} else if opcode2 == binaryAnd {
 		v.registers[vx] = v.registers[vx] & v.registers[vy]
-	} else if opcode2 == 3 {
+	} else if opcode2 == logicalXor {
 		v.registers[vx] = v.registers[vx] ^ v.registers[vy]
-	} else if opcode2 == 4 {
+	} else if opcode2 == addToVx {
 		vxRegister := v.registers[vx]
 		vyRegister := v.registers[vy]
 
 		v.registers[vx] = vxRegister + vyRegister
-		var sum uint16
-		sum = uint16(vxRegister) + uint16(vyRegister)
+		var sum = uint16(vxRegister) + uint16(vyRegister)
 		if sum > 255 {
 			v.registers[15] = 1
 		} else {
 			v.registers[15] = 0
 		}
-	} else if opcode2 == 5 {
+	} else if opcode2 == subtractFromVx {
 		vxRegister := v.registers[vx]
 		vyRegister := v.registers[vy]
 		v.registers[vx] = vxRegister - vyRegister
@@ -141,11 +154,11 @@ func (v *VM) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
 			underflowFlag = 0
 		}
 		v.registers[15] = underflowFlag
-	} else if opcode2 == 6 {
+	} else if opcode2 == shiftRight {
 		overflow := v.registers[vy] & 0b00000001
 		v.registers[15] = overflow
 		v.registers[vx] = v.registers[vy] >> 1
-	} else if opcode2 == 7 {
+	} else if opcode2 == subtractFromVy {
 		vxRegister := v.registers[vx]
 		vyRegister := v.registers[vy]
 		v.registers[vx] = vyRegister - vxRegister
@@ -156,7 +169,7 @@ func (v *VM) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
 		}
 		v.registers[15] = underflowFlag
 
-	} else if opcode2 == 0xE {
+	} else if opcode2 == shiftLeft {
 		overflow := v.registers[vy] & 0b10000000
 		v.registers[15] = overflow >> 7
 		v.registers[vx] = v.registers[vy] << 1
