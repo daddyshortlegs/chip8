@@ -62,6 +62,10 @@ func (v *VM) Run() {
 			if v.registers[vx] != extractSecondByte(instr) {
 				v.pc += 2
 			}
+		} else if opCode == 0x5 {
+			if v.registers[vx] == v.registers[vy] {
+				v.pc += 2
+			}
 		} else if opCode == 0x6 {
 			v.setRegister(instr)
 		} else if opCode == 0x7 {

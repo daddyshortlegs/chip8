@@ -443,6 +443,24 @@ func (suite *Chip8TestSuite) TestDoesNotSkipIfEqualToRegister() {
 	suite.Equal(uint16(0x206), suite.vm.pc)
 }
 
+func (suite *Chip8TestSuite) TestSkipsWhenVxAndVyAreEqual() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x15,
+		SET_REGISTER_1, 0x15,
+		0x50, 0x10})
+	suite.Equal(uint16(0x20A), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreNotEqual() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+	suite.executeInstruction([]byte{
+		SET_REGISTER_0, 0x15,
+		SET_REGISTER_1, 0x20,
+		0x50, 0x10})
+	suite.Equal(uint16(0x208), suite.vm.pc)
+}
+
 /*
 TODO:
 
