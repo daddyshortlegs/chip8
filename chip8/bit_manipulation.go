@@ -43,3 +43,10 @@ func GetValueAtPosition(position int, value byte) byte {
 	bitmask := byte(0b00000001)
 	return result & bitmask
 }
+
+func splitNumberIntoUnits(number byte) (byte, byte, byte) {
+	hundreds := number / 100
+	tens := (number % 100) / 10
+	ones := number % 10
+	return hundreds, tens, ones
+}
