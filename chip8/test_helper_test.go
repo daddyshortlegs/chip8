@@ -19,10 +19,3 @@ func TestCreateDrawInstruction(t *testing.T) {
 	result := drawOpcode(0x5, 0xA, 5)
 	assert.Equal(t, []byte{0xD5, 0xA5}, result)
 }
-
-func TestSplitInteger(t *testing.T) {
-	hundreds, tens, ones := splitNumberIntoUnits(157)
-	assert.Equal(t, byte(1), hundreds)
-	assert.Equal(t, byte(5), tens)
-	assert.Equal(t, byte(7), ones)
-}

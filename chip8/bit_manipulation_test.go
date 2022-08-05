@@ -60,3 +60,10 @@ func TestValueAtPosition3(t *testing.T) {
 	assert.Equal(t, uint8(0), GetValueAtPosition(3, 0b0001))
 	assert.Equal(t, uint8(1), GetValueAtPosition(3, 0b1111))
 }
+
+func TestSplitInteger(t *testing.T) {
+	hundreds, tens, ones := splitNumberIntoUnits(157)
+	assert.Equal(t, byte(1), hundreds)
+	assert.Equal(t, byte(5), tens)
+	assert.Equal(t, byte(7), ones)
+}
