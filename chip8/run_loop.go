@@ -231,7 +231,7 @@ func (v *VM) setIndexRegister(instr uint16) {
 
 func (v *VM) jump(address uint16) {
 	v.pc = extract12BitNumber(address)
-	//fmt.Printf("Jump to %X\n", v.pc)
+	fmt.Printf("Jump to %X\n", v.pc)
 }
 
 func (v *VM) getXCoordinate() byte {
