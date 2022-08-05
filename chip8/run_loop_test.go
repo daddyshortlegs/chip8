@@ -478,6 +478,13 @@ func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreEqual() {
 	suite.Equal(uint16(0x208), suite.vm.pc)
 }
 
+func (suite *Chip8TestSuite) TestJumpToSubroutineUpdatesProgramCounterAndPushesToStack() {
+	suite.executeInstruction([]byte{0x23, 0x45})
+	suite.Equal(uint16(0x345), suite.vm.pc)
+	value, _ := suite.vm.theStack.Pop()
+	suite.Equal(uint16(0x345), value)
+}
+
 /*
 TODO:
 

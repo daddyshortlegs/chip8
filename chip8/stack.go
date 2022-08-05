@@ -11,7 +11,7 @@ func (s stack) length() int {
 	return s.index
 }
 
-func (s *stack) push(value uint16) error {
+func (s *stack) Push(value uint16) error {
 	if s.index >= len(s.address) {
 		return errors.New("stack overflow")
 	}
@@ -20,7 +20,7 @@ func (s *stack) push(value uint16) error {
 	return nil
 }
 
-func (s *stack) pop() (uint16, error) {
+func (s *stack) Pop() (uint16, error) {
 	s.index--
 	if s.index < 0 {
 		return 0, errors.New("stack empty")

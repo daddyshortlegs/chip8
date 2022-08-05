@@ -14,6 +14,7 @@ type VM struct {
 	xCoord                  byte
 	yCoord                  byte
 	random                  Random
+	theStack                stack
 }
 
 func NewVM(display DisplayInterface, random Random) *VM {
@@ -54,6 +55,12 @@ func (v *VM) Run() {
 			v.jump(instr)
 			v.previousInstructionJump = true
 			//continue
+		} else if opCode == 0x2 {
+			address := extract12BitNumber(instr)
+			v.pc = address
+			fmt.Printf("Jump to %X\n", v.pc)
+			v.theStack.Push(address)
+			v.previousInstructionJump = true
 		} else if opCode == 0x3 {
 			if v.registers[vx] == extractSecondByte(instr) {
 				v.pc += 2
