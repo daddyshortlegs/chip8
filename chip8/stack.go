@@ -7,7 +7,7 @@ type stack struct {
 	index   int
 }
 
-func (s stack) length() int {
+func (s *stack) length() int {
 	return s.index
 }
 

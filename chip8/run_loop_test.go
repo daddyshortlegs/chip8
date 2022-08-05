@@ -52,7 +52,7 @@ func (suite *Chip8TestSuite) TestSetRegisters() {
 }
 
 func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, result int) {
-	suite.executeInstruction(instruction)
+	suite.executeInstruction2(instruction)
 	suite.Equal(byte(result), suite.vm.registers[register])
 }
 
@@ -65,11 +65,15 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 	suite.Equal(byte(0xCC), suite.vm.registers[5])
 }
 
-func (suite *Chip8TestSuite) executeInstruction(data []byte) {
+func (suite *Chip8TestSuite) executeInstruction2(data []byte) {
 	m := mockDisplay{false, drawPatternValues{}, true}
 	r := MockRandom{55}
 	suite.vm = NewVM(&m, r)
 
+	suite.executeInstruction(data)
+}
+
+func (suite *Chip8TestSuite) executeInstruction(data []byte) {
 	suite.vm.Load(data)
 	suite.vm.Run()
 }
@@ -485,18 +489,22 @@ func (suite *Chip8TestSuite) TestJumpToSubroutineUpdatesProgramCounterAndPushesT
 	suite.Equal(uint16(0x345), value)
 }
 
+func (suite *Chip8TestSuite) TestReturnFromSubroutine() {
+	suite.vm.theStack.Push(0xA12)
+	suite.vm.Load([]byte{0x00, 0xEE})
+	suite.vm.Run()
+	suite.Equal(uint16(0xA12), suite.vm.pc)
+}
+
 /*
 TODO:
 
-
-00EE and 2NNN: Subroutines
 BNNN: Jump with offset
 EX9E and EXA1: Skip if key
 FX07, FX15 and FX18: Timers
 FX1E: Add to index
 FX0A: Get key
-FX55 and FX65: Store and load memoryPermalink
-
+FX55 and FX65: Store and load memory
 
 */
 

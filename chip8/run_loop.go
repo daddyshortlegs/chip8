@@ -14,7 +14,7 @@ type VM struct {
 	xCoord                  byte
 	yCoord                  byte
 	random                  Random
-	theStack                stack
+	theStack                *stack
 }
 
 func NewVM(display DisplayInterface, random Random) *VM {
@@ -22,6 +22,7 @@ func NewVM(display DisplayInterface, random Random) *VM {
 	vm.display = display
 	vm.random = random
 	vm.pc = 0x200
+	vm.theStack = new(stack)
 	font := createFont()
 	copy(vm.Memory[0x50:], font)
 	return vm
@@ -51,10 +52,14 @@ func (v *VM) Run() {
 		if instr == 0x00E0 {
 			println("ClearScreen")
 			v.display.ClearScreen()
+		} else if instr == 0x00EE {
+			address, _ := v.theStack.Pop()
+			v.pc = address
+			v.previousInstructionJump = true
+
 		} else if opCode == 0x1 {
 			v.jump(instr)
 			v.previousInstructionJump = true
-			//continue
 		} else if opCode == 0x2 {
 			address := extract12BitNumber(instr)
 			v.pc = address
