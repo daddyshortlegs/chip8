@@ -4,6 +4,15 @@ type mockDisplay struct {
 	screenCleared bool
 	values        drawPatternValues
 	poll          bool
+	fakeKey       int
+}
+
+func (k *mockDisplay) GetKey() int {
+	return k.fakeKey
+}
+
+func (k *mockDisplay) SetKey(key int) {
+	k.fakeKey = key
 }
 
 type drawPatternValues struct {

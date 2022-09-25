@@ -13,7 +13,8 @@ func main() {
 
 	nano := time.Now().UnixNano()
 	random := chip8.PseudoRandom{Seed: nano}
-	vm := chip8.NewVM(chip8Display, random)
+
+	vm := chip8.NewVM(&chip8Display, random)
 
 	dat, _ := ioutil.ReadFile("IBM-Logo.ch8")
 	//check(err)

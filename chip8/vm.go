@@ -53,7 +53,7 @@ func (v *VM) Run() {
 
 		} else if opCode == 0x1 {
 			v.pc = extract12BitNumber(instr)
-			fmt.Printf("Jump to %X\n", v.pc)
+			//fmt.Printf("Jump to %X\n", v.pc)
 			v.previousInstructionJump = true
 		} else if opCode == 0x2 {
 			address := extract12BitNumber(instr)
@@ -117,6 +117,9 @@ func (v *VM) Run() {
 			} else if secondByte == 0x29 {
 				character := v.registers[vx]
 				v.indexRegister = 0x50 + uint16(character*5)
+			} else if secondByte == 0x0A {
+				key := v.display.GetKey()
+				v.registers[vx] = byte(key)
 			}
 
 		} else {

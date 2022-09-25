@@ -22,7 +22,7 @@ const AddRegister0 = 0x70
 const FontRegister0 = 0xF0
 
 func (suite *Chip8TestSuite) SetupTest() {
-	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, true}
+	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, true, 4}
 	suite.mockRandom = MockRandom{55}
 	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
 }
@@ -66,7 +66,7 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 }
 
 func (suite *Chip8TestSuite) executeInstruction2(data []byte) {
-	m := mockDisplay{false, drawPatternValues{}, true}
+	m := mockDisplay{false, drawPatternValues{}, true, 0}
 	r := MockRandom{55}
 	suite.vm = NewVM(&m, r)
 
@@ -286,7 +286,7 @@ func (suite *Chip8TestSuite) TestVYSubtractVXUnderflow() {
 	suite.Equal(byte(0), suite.vm.registers[15])
 }
 
-//8XY6
+// 8XY6
 func (suite *Chip8TestSuite) TestVXShiftRight() {
 	suite.executeInstruction([]byte{
 		SetRegister1, 0b11111110, // Set register 1 to 10
@@ -298,7 +298,7 @@ func (suite *Chip8TestSuite) TestVXShiftRight() {
 	suite.Equal(byte(0), suite.vm.registers[15])
 }
 
-//8XY6
+// 8XY6
 func (suite *Chip8TestSuite) TestVXShiftRightWithOverflow() {
 	suite.executeInstruction([]byte{
 		SetRegister1, 0b00110001, // Set register 1 to 10
@@ -383,7 +383,7 @@ func (suite *Chip8TestSuite) TestRandomNumber() {
 }
 
 func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bitmask byte, fakeRandom byte, expected int, expectedRegister int) {
-	m := mockDisplay{false, drawPatternValues{}, true}
+	m := mockDisplay{false, drawPatternValues{}, true, 0}
 	r := MockRandom{fakeRandom}
 
 	suite.vm = NewVM(&m, r)
@@ -494,6 +494,17 @@ func (suite *Chip8TestSuite) TestReturnFromSubroutine() {
 	suite.vm.Load([]byte{0x00, 0xEE})
 	suite.vm.Run()
 	suite.Equal(uint16(0xA12), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestGetKey() {
+	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, true, 55}
+	suite.mockRandom = MockRandom{55}
+	suite.mockDisplay.SetKey(55)
+	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
+
+	suite.vm.Load([]byte{0xF3, 0x0A})
+	suite.vm.Run()
+	suite.Equal(byte(55), suite.vm.registers[3])
 }
 
 /*

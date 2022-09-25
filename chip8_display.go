@@ -10,6 +10,10 @@ type Chip8Display struct {
 	window *sdl.Window
 }
 
+func (k *Chip8Display) GetKey() int {
+	return -1
+}
+
 func (d *Chip8Display) startUp() {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
@@ -72,10 +76,12 @@ func (d Chip8Display) WaitForExit() {
 
 func (d Chip8Display) PollEvents() bool {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-		switch event.(type) {
+		switch t := event.(type) {
 		case *sdl.QuitEvent:
 			println("Quit")
 			return false
+		case *sdl.KeyboardEvent:
+			println("keyboard %s", t.Keysym.Sym)
 		}
 	}
 	return true
