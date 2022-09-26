@@ -3,7 +3,7 @@ package chip8
 type mockDisplay struct {
 	screenCleared bool
 	values        drawPatternValues
-	poll          bool
+	eventType     EventType
 	fakeKey       int
 }
 
@@ -33,10 +33,10 @@ func (m *mockDisplay) ClearScreen() {
 	m.screenCleared = true
 }
 
-func (m *mockDisplay) PollEvents() bool {
-	return m.poll
+func (m *mockDisplay) PollEvents() EventType {
+	return m.eventType
 }
 
-func (m *mockDisplay) setPollEvents(poll bool) {
-	m.poll = poll
+func (m *mockDisplay) setPollEvents(eventType EventType) {
+	m.eventType = eventType
 }

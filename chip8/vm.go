@@ -40,8 +40,8 @@ func (v *VM) Run() {
 			return
 		}
 
-		quit = v.display.PollEvents()
-		if quit == true {
+		eventType := v.display.PollEvents()
+		if eventType == QuitEvent {
 			return
 		}
 	}

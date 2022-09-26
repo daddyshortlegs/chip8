@@ -22,7 +22,7 @@ const AddRegister0 = 0x70
 const FontRegister0 = 0xF0
 
 func (suite *Chip8TestSuite) SetupTest() {
-	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, false, 4}
+	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, KeyboardEvent, 4}
 	suite.mockRandom = MockRandom{55}
 	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
 }
@@ -66,7 +66,7 @@ func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
 }
 
 func (suite *Chip8TestSuite) executeInstruction2(data []byte) {
-	m := mockDisplay{false, drawPatternValues{}, true, 0}
+	m := mockDisplay{false, drawPatternValues{}, QuitEvent, 0}
 	r := MockRandom{55}
 	suite.vm = NewVM(&m, r)
 
@@ -383,7 +383,7 @@ func (suite *Chip8TestSuite) TestRandomNumber() {
 }
 
 func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bitmask byte, fakeRandom byte, expected int, expectedRegister int) {
-	m := mockDisplay{false, drawPatternValues{}, true, 0}
+	m := mockDisplay{false, drawPatternValues{}, QuitEvent, 0}
 	r := MockRandom{fakeRandom}
 
 	suite.vm = NewVM(&m, r)
@@ -497,7 +497,7 @@ func (suite *Chip8TestSuite) TestReturnFromSubroutine() {
 }
 
 func (suite *Chip8TestSuite) TestGetKey() {
-	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, true, 55}
+	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, KeyboardEvent, 55}
 	suite.mockRandom = MockRandom{55}
 	suite.mockDisplay.SetKey(55)
 	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)

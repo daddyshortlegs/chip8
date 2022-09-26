@@ -70,26 +70,20 @@ func (d Chip8Display) drawByte(value byte, xpos byte, ypos byte) {
 	d.window.UpdateSurface()
 }
 
-func (d Chip8Display) WaitForExit() {
-	running := true
-	for running {
-		running = d.PollEvents()
-	}
-}
-
-func (d Chip8Display) PollEvents() (quit bool) {
+func (d Chip8Display) PollEvents() (quit chip8.EventType) {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
 		case *sdl.QuitEvent:
 			println("Quit")
-			return true
+			return chip8.QuitEvent
 		case *sdl.KeyboardEvent:
 			println("keyboard %s", t.Keysym.Sym)
 			d.keyCode = t.Keysym.Sym
 			d.keyPressed = true
+			return chip8.KeyboardEvent
 		}
 	}
-	return false
+	return chip8.NoEvent
 }
 
 func (d Chip8Display) drawPoint(surface *sdl.Surface, x byte, y byte) {
