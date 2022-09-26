@@ -35,101 +35,112 @@ func (v *VM) Load(bytes []byte) {
 func (v *VM) Run() {
 	v.previousInstructionJump = false
 	for {
-		instr := v.fetchNextInstruction()
-		if instr == 0x0000 {
-			break
+		quit := v.fetchAndProcessInstruction()
+		if quit == true {
+			return
 		}
 
-		i := instruction{instr}
-		opCode, vx, vy, opcode2 := i.extractNibbles()
-
-		if instr == 0x00E0 {
-			println("ClearScreen")
-			v.display.ClearScreen()
-		} else if instr == 0x00EE {
-			address, _ := v.theStack.Pop()
-			v.pc = address
-			v.previousInstructionJump = true
-
-		} else if opCode == 0x1 {
-			v.pc = extract12BitNumber(instr)
-			//fmt.Printf("Jump to %X\n", v.pc)
-			v.previousInstructionJump = true
-		} else if opCode == 0x2 {
-			address := extract12BitNumber(instr)
-			v.pc = address
-			fmt.Printf("Jump to %X\n", v.pc)
-			v.theStack.Push(address)
-			v.previousInstructionJump = true
-		} else if opCode == 0x3 {
-			if v.registers[vx] == extractSecondByte(instr) {
-				v.pc += 2
-			}
-		} else if opCode == 0x4 {
-			if v.registers[vx] != extractSecondByte(instr) {
-				v.pc += 2
-			}
-		} else if opCode == 0x5 {
-			if v.registers[vx] == v.registers[vy] {
-				v.pc += 2
-			}
-		} else if opCode == 0x9 {
-			if v.registers[vx] != v.registers[vy] {
-				v.pc += 2
-			}
-		} else if opCode == 0x6 {
-			v.setRegister(instr)
-		} else if opCode == 0x7 {
-			v.addToRegister(instr)
-		} else if opCode == 0x8 {
-			v.executeArthimeticInstrucions(opcode2, vx, vy)
-		} else if opCode == 0xA {
-			v.indexRegister = extract12BitNumber(instr)
-			fmt.Printf("Set Index Register %X\n", v.indexRegister)
-		} else if opCode == 0xC {
-			randomNumber := v.random.Generate()
-			firstByte := extractFirstByte(instr)
-			index := getRightNibble(firstByte)
-			secondByte := extractSecondByte(instr)
-			v.registers[index] = randomNumber & secondByte
-		} else if opCode == 0xD {
-			numberOfBytes := opcode2
-
-			v.xCoord = v.registers[vx] & 63
-			v.yCoord = v.registers[vy] & 31
-			v.registers[15] = 0
-
-			fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
-			v.display.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
-		} else if opCode == 0xF {
-
-			secondByte := extractSecondByte(instr)
-
-			if secondByte == 0x33 {
-				value := v.registers[vx]
-				hundreds, tens, ones := splitNumberIntoUnits(value)
-
-				address := v.indexRegister
-				v.Memory[address] = hundreds
-				v.Memory[address+1] = tens
-				v.Memory[address+2] = ones
-
-			} else if secondByte == 0x29 {
-				character := v.registers[vx]
-				v.indexRegister = 0x50 + uint16(character*5)
-			} else if secondByte == 0x0A {
-				key := v.display.GetKey()
-				v.registers[vx] = byte(key)
-			}
-
-		} else {
-			v.previousInstructionJump = false
-		}
-		quit := v.display.PollEvents()
-		if quit == false {
+		quit = v.display.PollEvents()
+		if quit == true {
 			return
 		}
 	}
+}
+
+func (v *VM) fetchAndProcessInstruction() (quit bool) {
+	instr := v.fetchNextInstruction()
+	if instr == 0x0000 {
+		return true
+	}
+
+	i := instruction{instr}
+	opCode, vx, vy, opcode2 := i.extractNibbles()
+
+	if instr == 0x00E0 {
+		println("ClearScreen")
+		v.display.ClearScreen()
+	} else if instr == 0x00EE {
+		address, _ := v.theStack.Pop()
+		v.pc = address
+		v.previousInstructionJump = true
+
+	} else if opCode == 0x1 {
+		v.pc = extract12BitNumber(instr)
+		//fmt.Printf("Jump to %X\n", v.pc)
+		v.previousInstructionJump = true
+	} else if opCode == 0x2 {
+		address := extract12BitNumber(instr)
+		v.pc = address
+		fmt.Printf("Jump to %X\n", v.pc)
+		v.theStack.Push(address)
+		v.previousInstructionJump = true
+	} else if opCode == 0x3 {
+		if v.registers[vx] == extractSecondByte(instr) {
+			v.pc += 2
+		}
+	} else if opCode == 0x4 {
+		if v.registers[vx] != extractSecondByte(instr) {
+			v.pc += 2
+		}
+	} else if opCode == 0x5 {
+		if v.registers[vx] == v.registers[vy] {
+			v.pc += 2
+		}
+	} else if opCode == 0x9 {
+		if v.registers[vx] != v.registers[vy] {
+			v.pc += 2
+		}
+	} else if opCode == 0x6 {
+		v.setRegister(instr)
+	} else if opCode == 0x7 {
+		v.addToRegister(instr)
+	} else if opCode == 0x8 {
+		v.executeArthimeticInstrucions(opcode2, vx, vy)
+	} else if opCode == 0xA {
+		v.indexRegister = extract12BitNumber(instr)
+		fmt.Printf("Set Index Register %X\n", v.indexRegister)
+	} else if opCode == 0xC {
+		randomNumber := v.random.Generate()
+		firstByte := extractFirstByte(instr)
+		index := getRightNibble(firstByte)
+		secondByte := extractSecondByte(instr)
+		v.registers[index] = randomNumber & secondByte
+	} else if opCode == 0xD {
+		numberOfBytes := opcode2
+
+		v.xCoord = v.registers[vx] & 63
+		v.yCoord = v.registers[vy] & 31
+		v.registers[15] = 0
+
+		fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
+		v.display.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
+	} else if opCode == 0xF {
+		secondByte := extractSecondByte(instr)
+
+		if secondByte == 0x33 {
+			value := v.registers[vx]
+			hundreds, tens, ones := splitNumberIntoUnits(value)
+
+			address := v.indexRegister
+			v.Memory[address] = hundreds
+			v.Memory[address+1] = tens
+			v.Memory[address+2] = ones
+
+		} else if secondByte == 0x29 {
+			character := v.registers[vx]
+			v.indexRegister = 0x50 + uint16(character*5)
+		} else if secondByte == 0x0A {
+			// If we get a key then suspend processing of further opcodes
+
+			key := v.display.GetKey()
+			v.registers[vx] = byte(key)
+			fmt.Printf("key %d\n", key)
+		}
+
+	} else {
+		v.previousInstructionJump = false
+	}
+	return false
 }
 
 func (v *VM) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {

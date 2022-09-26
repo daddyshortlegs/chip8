@@ -22,7 +22,7 @@ const AddRegister0 = 0x70
 const FontRegister0 = 0xF0
 
 func (suite *Chip8TestSuite) SetupTest() {
-	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, true, 4}
+	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, false, 4}
 	suite.mockRandom = MockRandom{55}
 	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
 }

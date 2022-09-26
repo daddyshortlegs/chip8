@@ -7,11 +7,14 @@ import (
 )
 
 type Chip8Display struct {
-	window *sdl.Window
+	window     *sdl.Window
+	keyCode    sdl.Keycode
+	keyPressed bool
 }
 
 func (k *Chip8Display) GetKey() int {
-	return -1
+	k.keyPressed = false
+	return int(k.keyCode)
 }
 
 func (d *Chip8Display) startUp() {
@@ -74,17 +77,19 @@ func (d Chip8Display) WaitForExit() {
 	}
 }
 
-func (d Chip8Display) PollEvents() bool {
+func (d Chip8Display) PollEvents() (quit bool) {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
 		case *sdl.QuitEvent:
 			println("Quit")
-			return false
+			return true
 		case *sdl.KeyboardEvent:
 			println("keyboard %s", t.Keysym.Sym)
+			d.keyCode = t.Keysym.Sym
+			d.keyPressed = true
 		}
 	}
-	return true
+	return false
 }
 
 func (d Chip8Display) drawPoint(surface *sdl.Surface, x byte, y byte) {
