@@ -144,6 +144,13 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 			fmt.Printf("key returned is %d\n", key)
 		} else if secondByte == 0x1E {
 			v.indexRegister += uint16(v.registers[vx])
+		} else if secondByte == 0x55 {
+			max := int(vx)
+			startMemory := v.indexRegister
+			for i := 0; i <= max; i++ {
+				v.Memory[startMemory] = v.registers[i]
+				startMemory++
+			}
 		}
 
 	} else {

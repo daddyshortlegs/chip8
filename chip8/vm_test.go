@@ -14,7 +14,6 @@ type Chip8TestSuite struct {
 
 const FontMemory = 0x50
 const SetRegister0 = 0x60
-const SetRegister1 = 0x61
 const SetRegister2 = 0x62
 const SetRegister3 = 0x63
 const SetRegister4 = 0x64
@@ -45,7 +44,7 @@ func (suite *Chip8TestSuite) TestFetchNextInstruction() {
 
 func (suite *Chip8TestSuite) TestSetRegisters() {
 	verifyRegisterSet(suite, []byte{SetRegister0, 0xFF}, 0, 0xFF)
-	verifyRegisterSet(suite, []byte{SetRegister1, 0xEE}, 1, 0xEE)
+	verifyRegisterSet(suite, []byte{0x61, 0xEE}, 1, 0xEE)
 	verifyRegisterSet(suite, []byte{SetRegister2, 0xDD}, 2, 0xDD)
 	verifyRegisterSet(suite, []byte{SetRegister3, 0xCC}, 3, 0xCC)
 	verifyRegisterSet(suite, []byte{SetRegister4, 0xBB}, 4, 0xBB)
@@ -57,7 +56,7 @@ func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, 
 }
 
 func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
-	suite.vm.Load([]byte{SetRegister0, 0x11, SetRegister1, 0x12, 0x65, 0xCC})
+	suite.vm.Load([]byte{SetRegister0, 0x11, 0x61, 0x12, 0x65, 0xCC})
 	suite.vm.Run()
 
 	suite.Equal(byte(0x11), suite.vm.registers[0])
@@ -179,7 +178,7 @@ func (suite *Chip8TestSuite) TestVXIsSetToVY() {
 func (suite *Chip8TestSuite) TestVXIsSetToBinaryORofVXVY() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x0F, // Set register 0 to 0x0F
-		SetRegister1, 0xF0, // Set register 1 to 0xF0
+		0x61, 0xF0, // Set register 1 to 0xF0
 		0x80, 0x11, // Set register 0 to what's in register 0 & 1 ORd together
 	})
 
@@ -189,7 +188,7 @@ func (suite *Chip8TestSuite) TestVXIsSetToBinaryORofVXVY() {
 func (suite *Chip8TestSuite) TestVXIsSetToBinaryANDofVXVY() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0b00001111, // Set register 0 to ...
-		SetRegister1, 0b00110011, // Set register 1 to ...
+		0x61, 0b00110011, // Set register 1 to ...
 		0x80, 0x12, // Set register 0 to what's in register 0 & 1 ANDd together
 	})
 
@@ -199,7 +198,7 @@ func (suite *Chip8TestSuite) TestVXIsSetToBinaryANDofVXVY() {
 func (suite *Chip8TestSuite) TestVXIsSetToBinaryXORofVXVY() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0b00001111, // Set register 0 to ...
-		SetRegister1, 0b00110011, // Set register 1 to ...
+		0x61, 0b00110011, // Set register 1 to ...
 		0x80, 0x13, // Set register 0 to what's in register 0 & 1 ANDd together
 	})
 
@@ -209,7 +208,7 @@ func (suite *Chip8TestSuite) TestVXIsSetToBinaryXORofVXVY() {
 func (suite *Chip8TestSuite) TestAddWithNoCarry() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x0A, // Set register 0 to ...
-		SetRegister1, 0x0A, // Set register 1 to ...
+		0x61, 0x0A, // Set register 1 to ...
 		0x80, 0x14, // Set register 0 to what's in register 0 + 1
 	})
 
@@ -220,7 +219,7 @@ func (suite *Chip8TestSuite) TestAddWithNoCarry() {
 func (suite *Chip8TestSuite) TestAddWithCarry() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0xFF, // Set register 0 to ...
-		SetRegister1, 0x01, // Set register 1 to ...
+		0x61, 0x01, // Set register 1 to ...
 		0x80, 0x14, // Set register 0 to what's in register 0 + 1
 	})
 
@@ -233,7 +232,7 @@ func (suite *Chip8TestSuite) TestCarryFlagIsSetTo0AfterPreviousCarry() {
 
 	suite.vm.Load([]byte{
 		SetRegister0, 0x0A, // Set register 0 to ...
-		SetRegister1, 0x0A, // Set register 1 to ...
+		0x61, 0x0A, // Set register 1 to ...
 		0x80, 0x14, // Set register 0 to what's in register 0 + 1
 	})
 	suite.vm.Run()
@@ -245,7 +244,7 @@ func (suite *Chip8TestSuite) TestCarryFlagIsSetTo0AfterPreviousCarry() {
 func (suite *Chip8TestSuite) TestVXSubtractVY() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x0A, // Set register 0 to 10
-		SetRegister1, 0x01, // Set register 1 to 1
+		0x61, 0x01, // Set register 1 to 1
 		0x80, 0x15, // Set VX to 10 - 1
 	})
 
@@ -256,7 +255,7 @@ func (suite *Chip8TestSuite) TestVXSubtractVY() {
 func (suite *Chip8TestSuite) TestVXSubtractVYUnderflow() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x0A, // Set register 0 to 10
-		SetRegister1, 0x0B, // Set register 1 to 1
+		0x61, 0x0B, // Set register 1 to 1
 		0x80, 0x15, // Set VX to 10 - 11
 	})
 
@@ -267,7 +266,7 @@ func (suite *Chip8TestSuite) TestVXSubtractVYUnderflow() {
 func (suite *Chip8TestSuite) TestVYSubtractVX() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x01, // Set register 0 to 1
-		SetRegister1, 0x0A, // Set register 1 to 10
+		0x61, 0x0A, // Set register 1 to 10
 		0x80, 0x17, // Set VX to 10 - 1
 	})
 
@@ -278,7 +277,7 @@ func (suite *Chip8TestSuite) TestVYSubtractVX() {
 func (suite *Chip8TestSuite) TestVYSubtractVXUnderflow() {
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x0B, // Set register 0 to 11
-		SetRegister1, 0x0A, // Set register 1 to 10
+		0x61, 0x0A, // Set register 1 to 10
 		0x80, 0x17, // Set VX to 10 - 1
 	})
 
@@ -289,7 +288,7 @@ func (suite *Chip8TestSuite) TestVYSubtractVXUnderflow() {
 // 8XY6
 func (suite *Chip8TestSuite) TestVXShiftRight() {
 	suite.executeInstruction([]byte{
-		SetRegister1, 0b11111110, // Set register 1 to 10
+		0x61, 0b11111110, // Set register 1 to 10
 		0x80, 0x16, // Set VX to VY and shift right
 	})
 
@@ -301,7 +300,7 @@ func (suite *Chip8TestSuite) TestVXShiftRight() {
 // 8XY6
 func (suite *Chip8TestSuite) TestVXShiftRightWithOverflow() {
 	suite.executeInstruction([]byte{
-		SetRegister1, 0b00110001, // Set register 1 to 10
+		0x61, 0b00110001, // Set register 1 to 10
 		0x80, 0x16, // Set VX to VY and shift right
 	})
 
@@ -312,7 +311,7 @@ func (suite *Chip8TestSuite) TestVXShiftRightWithOverflow() {
 
 func (suite *Chip8TestSuite) TestVXShiftLeft() {
 	suite.executeInstruction([]byte{
-		SetRegister1, 0b01111110, // Set register 1 to 10
+		0x61, 0b01111110, // Set register 1 to 10
 		0x80, 0x1E, // Set VX to VY and shift right
 	})
 
@@ -323,7 +322,7 @@ func (suite *Chip8TestSuite) TestVXShiftLeft() {
 
 func (suite *Chip8TestSuite) TestVXShiftLeftWithOverflow() {
 	suite.executeInstruction([]byte{
-		SetRegister1, 0b11111100, // Set register 1 to 10
+		0x61, 0b11111100, // Set register 1 to 10
 		0x80, 0x1E, // Set VX to VY and shift right
 	})
 
@@ -451,7 +450,7 @@ func (suite *Chip8TestSuite) TestSkipsWhenVxAndVyAreEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x15,
-		SetRegister1, 0x15,
+		0x61, 0x15,
 		0x50, 0x10})
 	suite.Equal(uint16(0x20A), suite.vm.pc)
 }
@@ -459,7 +458,7 @@ func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreNotEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x15,
-		SetRegister1, 0x20,
+		0x61, 0x20,
 		0x50, 0x10})
 	suite.Equal(uint16(0x208), suite.vm.pc)
 }
@@ -468,7 +467,7 @@ func (suite *Chip8TestSuite) TestSkipsWhenVxAndVyAreNotEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x15,
-		SetRegister1, 0x25,
+		0x61, 0x25,
 		0x90, 0x10})
 	suite.Equal(uint16(0x20A), suite.vm.pc)
 }
@@ -477,7 +476,7 @@ func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
 	suite.executeInstruction([]byte{
 		SetRegister0, 0x25,
-		SetRegister1, 0x25,
+		0x61, 0x25,
 		0x90, 0x10})
 	suite.Equal(uint16(0x208), suite.vm.pc)
 }
@@ -518,23 +517,70 @@ func (suite *Chip8TestSuite) TestRegister0AddToIndex() {
 
 func (suite *Chip8TestSuite) TestRegister1AddToIndex() {
 	suite.executeInstruction([]byte{
-		SetRegister1, 0x55,
+		0x61, 0x55,
 		0xF1, 0x1E, // Add value in VX to index register
 	})
 
 	suite.Equal(uint16(0x55), suite.vm.indexRegister)
 }
 
+func (suite *Chip8TestSuite) TestStoreSingleRegisterToMemory() {
+	suite.executeInstruction([]byte{
+		0xA2, 0x00, // Set Index register to 200
+		SetRegister0, 0x69,
+		0xF0, 0x55,
+	})
+	suite.Equal(uint8(0x69), suite.vm.Memory[0x200])
+	suite.Equal(uint8(0x00), suite.vm.Memory[0x201])
+}
+
+func (suite *Chip8TestSuite) TestStoreTwoRegistersToMemory() {
+	suite.executeInstruction([]byte{
+		0xA2, 0x00, // Set Index register to 200
+		SetRegister0, 0x69,
+		0x61, 0x58,
+		0x62, 0x47,
+		0x63, 0x47,
+		0x64, 0x36,
+		0x65, 0x44,
+		0x66, 0x33,
+		0x67, 0x22,
+		0x68, 0x11,
+		0x69, 0x00,
+		0x6A, 0xAA,
+		0x6B, 0xBB,
+		0x6C, 0xCC,
+		0x6D, 0xDD,
+		0x6E, 0xEE,
+		0x6F, 0xFF,
+		0xFF, 0x55, // Store registers up to F
+	})
+	suite.Equal(uint8(0x69), suite.vm.Memory[0x200])
+	suite.Equal(uint8(0x58), suite.vm.Memory[0x201])
+	suite.Equal(uint8(0x47), suite.vm.Memory[0x202])
+	suite.Equal(uint8(0x47), suite.vm.Memory[0x203])
+	suite.Equal(uint8(0x36), suite.vm.Memory[0x204])
+	suite.Equal(uint8(0x44), suite.vm.Memory[0x205])
+	suite.Equal(uint8(0x33), suite.vm.Memory[0x206])
+	suite.Equal(uint8(0x22), suite.vm.Memory[0x207])
+	suite.Equal(uint8(0x11), suite.vm.Memory[0x208])
+	suite.Equal(uint8(0x00), suite.vm.Memory[0x209])
+	suite.Equal(uint8(0xAA), suite.vm.Memory[0x20A])
+	suite.Equal(uint8(0xBB), suite.vm.Memory[0x20B])
+	suite.Equal(uint8(0xCC), suite.vm.Memory[0x20C])
+	suite.Equal(uint8(0xDD), suite.vm.Memory[0x20D])
+	suite.Equal(uint8(0xEE), suite.vm.Memory[0x20E])
+	suite.Equal(uint8(0xFF), suite.vm.Memory[0x20F])
+}
+
 /*
 TODO:
-FX0A: Get key
 
 
 
 BNNN: Jump with offset
 EX9E and EXA1: Skip if key
 FX07, FX15 and FX18: Timers
-FX1E: Add to index
 FX55 and FX65: Store and load memory
 
 */
