@@ -573,6 +573,37 @@ func (suite *Chip8TestSuite) TestStoreTwoRegistersToMemory() {
 	suite.Equal(uint8(0xFF), suite.vm.Memory[0x20F])
 }
 
+func (suite *Chip8TestSuite) TestLoadSingleRegisterFromMemory() {
+	data := []byte{
+		0xA3, 0x00, // Set Index register to 200
+		0xF0, 0x65, // Load from memory
+	}
+
+	suite.vm.Load(data)
+	suite.vm.Memory[0x300] = 0x88
+	suite.vm.Run()
+	suite.Equal(uint8(0x88), suite.vm.registers[0])
+}
+
+func (suite *Chip8TestSuite) TestLoadMultipleRegistersFromMemory() {
+	data := []byte{
+		0xA3, 0x00, // Set Index register to 300
+		0xFF, 0x65, // Load from memory
+	}
+
+	suite.vm.Load(data)
+	suite.vm.Memory[0x300] = 0x88
+	suite.vm.Memory[0x301] = 0x99
+	suite.vm.Memory[0x302] = 0x77
+	suite.vm.Memory[0x30F] = 0x69
+	suite.vm.Run()
+	suite.Equal(uint8(0x88), suite.vm.registers[0])
+	suite.Equal(uint8(0x99), suite.vm.registers[1])
+	suite.Equal(uint8(0x77), suite.vm.registers[2])
+	suite.Equal(uint8(0x00), suite.vm.registers[10])
+	suite.Equal(uint8(0x69), suite.vm.registers[15])
+}
+
 /*
 TODO:
 

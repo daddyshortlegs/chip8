@@ -151,6 +151,12 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 				v.Memory[startMemory] = v.registers[i]
 				startMemory++
 			}
+		} else if secondByte == 0x65 {
+			startMemory := v.indexRegister
+			for i := 0; i <= int(vx); i++ {
+				v.registers[i] = v.Memory[startMemory]
+				startMemory++
+			}
 		}
 
 	} else {
