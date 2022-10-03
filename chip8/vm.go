@@ -11,6 +11,7 @@ type VM struct {
 	pc                      uint16
 	display                 DisplayInterface
 	previousInstructionJump bool
+	processInstructions     bool
 	xCoord                  byte
 	yCoord                  byte
 	random                  Random
@@ -23,6 +24,7 @@ func NewVM(display DisplayInterface, random Random) *VM {
 	vm.random = random
 	vm.pc = 0x200
 	vm.theStack = new(stack)
+	vm.processInstructions = true
 	font := createFont()
 	copy(vm.Memory[0x50:], font)
 	return vm
@@ -35,12 +37,17 @@ func (v *VM) Load(bytes []byte) {
 func (v *VM) Run() {
 	v.previousInstructionJump = false
 	for {
-		quit := v.fetchAndProcessInstruction()
-		if quit == true {
-			return
+		if v.processInstructions == true {
+			quit := v.fetchAndProcessInstruction()
+			if quit == true {
+				return
+			}
 		}
 
 		eventType := v.display.PollEvents()
+		if eventType == KeyboardEvent {
+			v.processInstructions = true
+		}
 		if eventType == QuitEvent {
 			return
 		}
@@ -131,10 +138,12 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 			v.indexRegister = 0x50 + uint16(character*5)
 		} else if secondByte == 0x0A {
 			// If we get a key then suspend processing of further opcodes
-
+			v.processInstructions = false
 			key := v.display.GetKey()
 			v.registers[vx] = byte(key)
-			fmt.Printf("key %d\n", key)
+			fmt.Printf("key returned is %d\n", key)
+		} else if secondByte == 0x1E {
+			v.indexRegister += uint16(v.registers[vx])
 		}
 
 	} else {

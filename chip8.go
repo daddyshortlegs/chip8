@@ -16,7 +16,7 @@ func main() {
 
 	vm := chip8.NewVM(&chip8Display, random)
 
-	dat, _ := ioutil.ReadFile("IBM-Logo.ch8")
+	dat, _ := ioutil.ReadFile("test_opcode.ch8")
 	//check(err)
 
 	vm.Load(dat)
@@ -43,14 +43,14 @@ func main() {
 	//
 	//	0xA0, 0x55, // Set Index Register to 0x55
 	//	0xD2, 0x35, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
-
-	//0xA0, 0x5A, // Set Index Register to 0x55
-	//0xD4, 0x55, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
-	//0xA0, 0x5F, // Set Index Register to 0x5F
-	//0xD6, 0x75, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
-	//0xA0, 0x64, // Set Index Register to 0x5F
-	//0xD8, 0x95, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
-	//0xF3, 0x0A, // Wait for key
+	//
+	//	0xA0, 0x5A, // Set Index Register to 0x55
+	//	0xD4, 0x55, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+	//	0xA0, 0x5F, // Set Index Register to 0x5F
+	//	0xD6, 0x75, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+	//	0xA0, 0x64, // Set Index Register to 0x5F
+	//	0xD8, 0x95, // Draw, Xreg = 5, Y reg = 10, 5 bytes high
+	//	0xF3, 0x0A, // Wait for key
 	//})
 	vm.Run()
 

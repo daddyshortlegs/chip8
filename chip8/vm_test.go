@@ -507,14 +507,34 @@ func (suite *Chip8TestSuite) TestGetKey() {
 	suite.Equal(byte(55), suite.vm.registers[3])
 }
 
+func (suite *Chip8TestSuite) TestRegister0AddToIndex() {
+	suite.executeInstruction([]byte{
+		SetRegister0, 0x25,
+		0xF0, 0x1E, // Add value in VX to index register
+	})
+
+	suite.Equal(uint16(0x25), suite.vm.indexRegister)
+}
+
+func (suite *Chip8TestSuite) TestRegister1AddToIndex() {
+	suite.executeInstruction([]byte{
+		SetRegister1, 0x55,
+		0xF1, 0x1E, // Add value in VX to index register
+	})
+
+	suite.Equal(uint16(0x55), suite.vm.indexRegister)
+}
+
 /*
 TODO:
+FX0A: Get key
+
+
 
 BNNN: Jump with offset
 EX9E and EXA1: Skip if key
 FX07, FX15 and FX18: Timers
 FX1E: Add to index
-FX0A: Get key
 FX55 and FX65: Store and load memory
 
 */
