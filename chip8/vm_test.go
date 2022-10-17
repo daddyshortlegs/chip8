@@ -604,15 +604,31 @@ func (suite *Chip8TestSuite) TestLoadMultipleRegistersFromMemory() {
 	suite.Equal(uint8(0x69), suite.vm.registers[15])
 }
 
+// FX07 sets VX to value of the delay timer
+// FX15 set the delay timer to value in VX
+
+func (suite *Chip8TestSuite) TestJumpWithoutOffset() {
+	suite.executeInstruction([]byte{0xB3, 0x45})
+	suite.Equal(uint16(0x345), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestJumpWithOffset() {
+	data := []byte{0xB3, 0x45}
+	suite.vm.Load(data)
+	suite.vm.registers[0] = 0x10
+	suite.vm.Run()
+	suite.Equal(uint16(0x355), suite.vm.pc)
+}
+
 /*
 TODO:
 
 
+// FX18 sets sound timer to value in VX
 
 BNNN: Jump with offset
 EX9E and EXA1: Skip if key
-FX07, FX15 and FX18: Timers
-FX55 and FX65: Store and load memory
+FX18: Timers
 
 */
 
