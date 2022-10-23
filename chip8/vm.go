@@ -67,7 +67,7 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	opCode, vx, vy, opcode2 := i.extractNibbles()
 
 	if instr == 0x00E0 {
-		//println("ClearScreen")
+		println("ClearScreen")
 		v.display.ClearScreen()
 	} else if instr == 0x00EE {
 		address, _ := v.theStack.Pop()
@@ -76,12 +76,12 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 
 	} else if opCode == 0x1 {
 		v.pc = extract12BitNumber(instr)
-		//fmt.Printf("Jump to %X\n", v.pc)
+		fmt.Printf("Jump to %X\n", v.pc)
 		v.previousInstructionJump = true
 	} else if opCode == 0x2 {
 		address := extract12BitNumber(instr)
 		v.pc = address
-		//fmt.Printf("Jump to %X\n", v.pc)
+		fmt.Printf("Jump to %X\n", v.pc)
 		v.theStack.Push(address)
 		v.previousInstructionJump = true
 	} else if opCode == 0x3 {
@@ -119,14 +119,14 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 		secondByte := extractSecondByte(instr)
 		v.registers[index] = randomNumber & secondByte
 	} else if opCode == 0xD {
-		numberOfBytes := opcode2
+		heightInPixels := opcode2
 
 		v.xCoord = v.registers[vx] & 63
 		v.yCoord = v.registers[vy] & 31
 		v.registers[15] = 0
 
-		//fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, numberOfBytes)
-		v.display.DrawSprite(v, v.indexRegister, numberOfBytes, v.xCoord, v.yCoord)
+		//fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, heightInPixels)
+		v.display.DrawSprite(v, v.indexRegister, heightInPixels, v.xCoord, v.yCoord)
 	} else if opCode == 0xF {
 		secondByte := extractSecondByte(instr)
 
@@ -263,13 +263,13 @@ func (v *VM) fetchAndIncrement() uint16 {
 
 func (v *VM) setRegister(instr uint16) {
 	index, secondByte := extractIndexAndValue(instr)
-	fmt.Printf("SetRegister %display to %display\n", index, secondByte)
+	fmt.Printf("SetRegister %d to %d\n", index, secondByte)
 	v.registers[index] = secondByte
 }
 
 func (v *VM) addToRegister(instr uint16) {
 	index, secondByte := extractIndexAndValue(instr)
-	fmt.Printf("Add To Register [%display] value %display\n", index, secondByte)
+	fmt.Printf("Add To Register [%d] value %d\n", index, secondByte)
 	v.registers[index] += secondByte
 }
 

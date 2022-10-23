@@ -43,10 +43,10 @@ func (d Chip8Display) ClearScreen() {
 	d.window.UpdateSurface()
 }
 
-func (d Chip8Display) DrawSprite(chip8 *chip8.VM, startAddress uint16, numberOfBytes byte, x byte, y byte) {
+func (d Chip8Display) DrawSprite(chip8 *chip8.VM, startAddress uint16, heightInPixels byte, x byte, y byte) {
 	yPos := y
 	address := startAddress
-	for n := 0; n < int(numberOfBytes); n++ {
+	for n := 0; n < int(heightInPixels); n++ {
 		value := chip8.Memory[address]
 		address++
 		d.drawByte(value, x, yPos)

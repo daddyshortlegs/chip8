@@ -16,7 +16,7 @@ func main() {
 
 	vm := chip8.NewVM(&chip8Display, random)
 
-	dat, _ := ioutil.ReadFile("IBM-Logo.ch8")
+	dat, _ := ioutil.ReadFile("roms/BC_test.ch8")
 	//check(err)
 
 	vm.Load(dat)
