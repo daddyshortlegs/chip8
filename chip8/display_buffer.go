@@ -16,11 +16,11 @@ func NewDisplayBuffer() *DisplayBuffer {
 	return db
 }
 
-func (d DisplayBuffer) DrawSprite(chip8 *VM, startAddress uint16, heightInPixels byte, x byte, y byte) {
+func (d DisplayBuffer) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) {
 	yPos := y
 	address := startAddress
 	for n := 0; n < int(heightInPixels); n++ {
-		value := chip8.Memory[address]
+		value := memory[address]
 		address++
 		d.drawByte(value, x, yPos)
 		yPos++

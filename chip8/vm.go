@@ -126,7 +126,7 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 		v.registers[15] = 0
 
 		//fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, heightInPixels)
-		v.display.DrawSprite(v, v.indexRegister, heightInPixels, v.xCoord, v.yCoord)
+		v.display.DrawSprite(v.indexRegister, heightInPixels, v.xCoord, v.yCoord, v.Memory)
 	} else if opCode == 0xF {
 		secondByte := extractSecondByte(instr)
 

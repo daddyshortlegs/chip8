@@ -10,7 +10,7 @@ const (
 
 type DisplayInterface interface {
 	ClearScreen()
-	DrawSprite(chip8 *VM, address uint16, numberOfBytes byte, x byte, y byte)
+	DrawSprite(address uint16, numberOfBytes byte, x byte, y byte, memory [4096]byte)
 	PollEvents() EventType
 	GetKey() int
 }
