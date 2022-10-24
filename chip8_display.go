@@ -32,24 +32,24 @@ func (d *Chip8Display) startUp() {
 	d.window = window
 }
 
-func (d Chip8Display) shutdown() {
+func (d *Chip8Display) shutdown() {
 	d.window.Destroy()
 	sdl.Quit()
 }
 
-func (d Chip8Display) ClearScreen() {
+func (d *Chip8Display) ClearScreen() {
 	surface := d.getSurface()
 	surface.FillRect(nil, 0)
 	d.window.UpdateSurface()
 }
 
-func (d Chip8Display) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) {
+func (d *Chip8Display) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) {
 	d.displayBuffer.DrawSprite(startAddress, heightInPixels, x, y, memory)
 
 	d.writeDisplay()
 }
 
-func (d Chip8Display) writeDisplay() {
+func (d *Chip8Display) writeDisplay() {
 	surface := d.getSurface()
 
 	for y := 0; y < 32; y++ {
@@ -63,12 +63,12 @@ func (d Chip8Display) writeDisplay() {
 	d.window.UpdateSurface()
 }
 
-func (d Chip8Display) drawPoint(surface *sdl.Surface, x byte, y byte) {
+func (d *Chip8Display) drawPoint(surface *sdl.Surface, x byte, y byte) {
 	rect := sdl.Rect{int32(x) * 10, int32(y) * 10, 10, 10}
 	surface.FillRect(&rect, 0x00fffff0)
 }
 
-func (d Chip8Display) getSurface() *sdl.Surface {
+func (d *Chip8Display) getSurface() *sdl.Surface {
 	surface, err := d.window.GetSurface()
 	if err != nil {
 		panic(err)
@@ -76,7 +76,7 @@ func (d Chip8Display) getSurface() *sdl.Surface {
 	return surface
 }
 
-func (d Chip8Display) PollEvents() (quit chip8.EventType) {
+func (d *Chip8Display) PollEvents() (quit chip8.EventType) {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
 		case *sdl.QuitEvent:

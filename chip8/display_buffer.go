@@ -34,9 +34,9 @@ func (d DisplayBuffer) drawByte(value byte, xpos byte, ypos byte) {
 		if bit == 1 {
 			if d.Pixels[ypos][xpos] == 1 {
 				d.Pixels[ypos][xpos] = 0
+				// Should set VF to 1
 			} else {
 				d.Pixels[ypos][xpos] = 1
-				// Should set VF to 1
 			}
 		}
 		xpos += 1
