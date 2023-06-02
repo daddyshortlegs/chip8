@@ -10,11 +10,10 @@ func NewAssembler() *Assembler {
 	return a
 }
 
-func (a *Assembler) setRegister(index int, value int) {
-	opcodes := []byte{0x60, 0x00}
+func (a *Assembler) setRegister(index byte, value byte) {
+	register := 0x60 + index
+	opcodes := []byte{register, value}
 	a.code = append(a.code, opcodes...)
-	//	a.code[0] = 0x60
-	//	a.code[1] = 0x00
 }
 
 func (a *Assembler) assemble() []byte {

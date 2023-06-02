@@ -15,11 +15,11 @@ func (suite *AssemblerTestSuite) TestSetRegister0() {
 	suite.Equal([]byte{0x60, 0x00}, theAssembler.assemble())
 }
 
-//func (suite *AssemblerTestSuite) TestSetRegister1() {
-//	theAssembler := assembler{}
-//	theAssembler.setRegister(1, 0x00)
-//	suite.Equal([]byte{0x61, 0x00}, theAssembler.assemble())
-//}
+func (suite *AssemblerTestSuite) TestSetRegister1() {
+	theAssembler := NewAssembler()
+	theAssembler.setRegister(1, 0x10)
+	suite.Equal([]byte{0x61, 0x10}, theAssembler.assemble())
+}
 
 func TestAssemblerTestSuite(t *testing.T) {
 	suite.Run(t, new(AssemblerTestSuite))
