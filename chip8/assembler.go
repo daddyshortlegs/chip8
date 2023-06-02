@@ -19,3 +19,18 @@ func (a *Assembler) setRegister(index byte, value byte) {
 func (a *Assembler) assemble() []byte {
 	return a.code
 }
+
+func (a *Assembler) setIndexRegister(value uint16) {
+	first := extractFirstByte(value)
+	second := extractSecondByte(value)
+	instruction := 0xA0 | first
+	opcodes := []byte{instruction, second}
+	a.code = append(a.code, opcodes...)
+}
+
+func (a *Assembler) display(xRegister byte, yRegister byte, n byte) {
+	instruction := 0xD0 | xRegister
+	second := (yRegister << 4) | n
+	opcodes := []byte{instruction, second}
+	a.code = append(a.code, opcodes...)
+}

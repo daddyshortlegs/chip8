@@ -21,6 +21,25 @@ func (suite *AssemblerTestSuite) TestSetRegister1() {
 	suite.Equal([]byte{0x61, 0x10}, theAssembler.assemble())
 }
 
+func (suite *AssemblerTestSuite) TestSetMultipleRegisters() {
+	theAssembler := NewAssembler()
+	theAssembler.setRegister(1, 0x10)
+	theAssembler.setRegister(2, 0x22)
+	suite.Equal([]byte{0x61, 0x10, 0x62, 0x22}, theAssembler.assemble())
+}
+
+func (suite *AssemblerTestSuite) TestIndexRegister() {
+	theAssembler := NewAssembler()
+	theAssembler.setIndexRegister(0x123)
+	suite.Equal([]byte{0xA1, 0x23}, theAssembler.assemble())
+}
+
+func (suite *AssemblerTestSuite) TestDraw() {
+	theAssembler := NewAssembler()
+	theAssembler.display(6, 4, 5)
+	suite.Equal([]byte{0xD6, 0x45}, theAssembler.assemble())
+}
+
 func TestAssemblerTestSuite(t *testing.T) {
 	suite.Run(t, new(AssemblerTestSuite))
 }
