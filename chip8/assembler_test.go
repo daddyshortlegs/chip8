@@ -11,74 +11,74 @@ type AssemblerTestSuite struct {
 
 func (suite *AssemblerTestSuite) TestSetRegister0() {
 	theAssembler := NewAssembler()
-	theAssembler.setRegister(0, 0x00)
-	suite.Equal([]byte{0x60, 0x00}, theAssembler.assemble())
+	theAssembler.SetRegister(0, 0x00)
+	suite.Equal([]byte{0x60, 0x00}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestSetRegister1() {
 	theAssembler := NewAssembler()
-	theAssembler.setRegister(1, 0x10)
-	suite.Equal([]byte{0x61, 0x10}, theAssembler.assemble())
+	theAssembler.SetRegister(1, 0x10)
+	suite.Equal([]byte{0x61, 0x10}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestSetMultipleRegisters() {
 	theAssembler := NewAssembler()
-	theAssembler.setRegister(1, 0x10)
-	theAssembler.setRegister(2, 0x22)
-	suite.Equal([]byte{0x61, 0x10, 0x62, 0x22}, theAssembler.assemble())
+	theAssembler.SetRegister(1, 0x10)
+	theAssembler.SetRegister(2, 0x22)
+	suite.Equal([]byte{0x61, 0x10, 0x62, 0x22}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestIndexRegister() {
 	theAssembler := NewAssembler()
-	theAssembler.setIndexRegister(0x123)
-	suite.Equal([]byte{0xA1, 0x23}, theAssembler.assemble())
+	theAssembler.SetIndexRegister(0x123)
+	suite.Equal([]byte{0xA1, 0x23}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestDraw() {
 	theAssembler := NewAssembler()
-	theAssembler.display(6, 4, 5)
-	suite.Equal([]byte{0xD6, 0x45}, theAssembler.assemble())
+	theAssembler.Display(6, 4, 5)
+	suite.Equal([]byte{0xD6, 0x45}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestGetKey() {
 	theAssembler := NewAssembler()
-	theAssembler.getKey(5)
-	suite.Equal([]byte{0xF5, 0x0A}, theAssembler.assemble())
+	theAssembler.GetKey(5)
+	suite.Equal([]byte{0xF5, 0x0A}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestProgram() {
 	theAssembler := NewAssembler()
-	theAssembler.setRegister(0, 0x19)
-	theAssembler.setRegister(1, 0x00)
+	theAssembler.SetRegister(0, 0x19)
+	theAssembler.SetRegister(1, 0x00)
 
-	theAssembler.setRegister(2, 0x20)
-	theAssembler.setRegister(3, 0x00)
+	theAssembler.SetRegister(2, 0x20)
+	theAssembler.SetRegister(3, 0x00)
 
-	theAssembler.setRegister(4, 0x1E)
-	theAssembler.setRegister(5, 0x00)
+	theAssembler.SetRegister(4, 0x1E)
+	theAssembler.SetRegister(5, 0x00)
 
-	theAssembler.setRegister(6, 0x23)
-	theAssembler.setRegister(7, 0x00)
+	theAssembler.SetRegister(6, 0x23)
+	theAssembler.SetRegister(7, 0x00)
 
-	theAssembler.setRegister(8, 0x28)
-	theAssembler.setRegister(9, 0x00)
+	theAssembler.SetRegister(8, 0x28)
+	theAssembler.SetRegister(9, 0x00)
 
-	theAssembler.setIndexRegister(0x50)
-	theAssembler.display(0, 1, 5)
+	theAssembler.SetIndexRegister(0x50)
+	theAssembler.Display(0, 1, 5)
 
-	theAssembler.setIndexRegister(0x55)
-	theAssembler.display(2, 3, 5)
+	theAssembler.SetIndexRegister(0x55)
+	theAssembler.Display(2, 3, 5)
 
-	theAssembler.setIndexRegister(0x5A)
-	theAssembler.display(4, 5, 5)
+	theAssembler.SetIndexRegister(0x5A)
+	theAssembler.Display(4, 5, 5)
 
-	theAssembler.setIndexRegister(0x5F)
-	theAssembler.display(6, 7, 5)
+	theAssembler.SetIndexRegister(0x5F)
+	theAssembler.Display(6, 7, 5)
 
-	theAssembler.setIndexRegister(0x64)
-	theAssembler.display(8, 9, 5)
+	theAssembler.SetIndexRegister(0x64)
+	theAssembler.Display(8, 9, 5)
 
-	theAssembler.getKey(3)
+	theAssembler.GetKey(3)
 
 	andysProgram := []byte{
 		0x60, 0x19,
@@ -113,7 +113,7 @@ func (suite *AssemblerTestSuite) TestProgram() {
 
 		0xF3, 0x0A,
 	}
-	suite.Equal(andysProgram, theAssembler.assemble())
+	suite.Equal(andysProgram, theAssembler.Assemble())
 }
 
 func TestAssemblerTestSuite(t *testing.T) {
