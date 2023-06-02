@@ -40,6 +40,12 @@ func (suite *AssemblerTestSuite) TestDraw() {
 	suite.Equal([]byte{0xD6, 0x45}, theAssembler.assemble())
 }
 
+func (suite *AssemblerTestSuite) TestGetKey() {
+	theAssembler := NewAssembler()
+	theAssembler.getKey(5)
+	suite.Equal([]byte{0xF5, 0x0A}, theAssembler.assemble())
+}
+
 func TestAssemblerTestSuite(t *testing.T) {
 	suite.Run(t, new(AssemblerTestSuite))
 }
