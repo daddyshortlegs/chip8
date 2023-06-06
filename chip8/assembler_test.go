@@ -46,6 +46,12 @@ func (suite *AssemblerTestSuite) TestGetKey() {
 	suite.Equal([]byte{0xF5, 0x0A}, theAssembler.Assemble())
 }
 
+func (suite *AssemblerTestSuite) TestClearScreen() {
+	theAssembler := NewAssembler()
+	theAssembler.ClearScreen()
+	suite.Equal([]byte{0x00, 0xE0}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestProgram() {
 	theAssembler := NewAssembler()
 	theAssembler.SetRegister(0, 0x19)

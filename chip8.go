@@ -29,37 +29,30 @@ func main() {
 
 func andysProgram() []byte {
 	a := chip8.NewAssembler()
-	a.SetRegister(0, 0x19)
-	a.SetRegister(1, 0x00)
 
-	a.SetRegister(2, 0x20)
-	a.SetRegister(3, 0x00)
-
-	a.SetRegister(4, 0x1E)
-	a.SetRegister(5, 0x00)
-
-	a.SetRegister(6, 0x23)
-	a.SetRegister(7, 0x00)
-
-	a.SetRegister(8, 0x28)
-	a.SetRegister(9, 0x00)
-
-	a.SetIndexRegister(0x50)
-	a.Display(0, 1, 5)
-
-	a.SetIndexRegister(0x55)
-	a.Display(2, 3, 5)
-
-	a.SetIndexRegister(0x5A)
-	a.Display(4, 5, 5)
-
-	a.SetIndexRegister(0x5F)
-	a.Display(6, 7, 5)
-
-	a.SetIndexRegister(0x64)
-	a.Display(8, 9, 5)
+	a.ClearScreen()
+	drawChar(a, 0, 0, 0x50)
+	drawChar(a, 5, 0, 0x55)
+	drawChar(a, 10, 0, 0x5A)
+	drawChar(a, 15, 0, 0x5F)
+	drawChar(a, 20, 0, 0x64)
 
 	a.GetKey(3)
+	a.ClearScreen()
+
+	a.GetKey(4) // This will not wait
 
 	return a.Assemble()
+}
+
+func drawChar(a *chip8.Assembler, xPosition int, yPosition int, startAddress int) {
+	drawAtFromAddress(a, xPosition, yPosition, startAddress, 5)
+}
+
+func drawAtFromAddress(a *chip8.Assembler, xPosition int, yPosition int, startAddress int, pixelsHigh int) {
+	a.SetRegister(0, byte(xPosition))
+	a.SetRegister(1, byte(yPosition))
+
+	a.SetIndexRegister(uint16(startAddress))
+	a.Display(0, 1, byte(pixelsHigh))
 }

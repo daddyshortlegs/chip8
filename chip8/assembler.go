@@ -33,6 +33,10 @@ func (a *Assembler) GetKey(xRegister byte) {
 	a.buildArray(0xF0|xRegister, 0x0A)
 }
 
+func (a *Assembler) ClearScreen() {
+	a.buildArray(0x00, 0xE0)
+}
+
 func (a *Assembler) Assemble() []byte {
 	return a.code
 }
