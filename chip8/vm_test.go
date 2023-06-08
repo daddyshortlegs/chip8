@@ -98,7 +98,11 @@ func (suite *Chip8TestSuite) TestSetIndexRegisterWith12BitValue() {
 }
 
 func (suite *Chip8TestSuite) TestSetJumpToAddress() {
-	suite.executeInstruction([]byte{0x13, 0x00})
+	asm := NewAssembler()
+	asm.Jump(0x300)
+	byteCode := asm.Assemble()
+
+	suite.executeInstruction(byteCode)
 	suite.Equal(uint16(0x300), suite.vm.pc)
 }
 

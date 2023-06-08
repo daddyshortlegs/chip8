@@ -52,6 +52,12 @@ func (suite *AssemblerTestSuite) TestClearScreen() {
 	suite.Equal([]byte{0x00, 0xE0}, theAssembler.Assemble())
 }
 
+func (suite *AssemblerTestSuite) TestJump() {
+	theAssembler := NewAssembler()
+	theAssembler.Jump(0x300)
+	suite.Equal([]byte{0x13, 0x00}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestProgram() {
 	theAssembler := NewAssembler()
 	theAssembler.SetRegister(0, 0x19)
