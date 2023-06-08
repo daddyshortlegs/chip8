@@ -501,7 +501,10 @@ func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreEqual() {
 }
 
 func (suite *Chip8TestSuite) TestJumpToSubroutineUpdatesProgramCounterAndPushesToStack() {
-	suite.executeInstruction([]byte{0x23, 0x45})
+	asm := NewAssembler()
+	asm.Sub(0x345)
+
+	suite.executeInstruction(asm.Assemble())
 	suite.Equal(uint16(0x345), suite.vm.pc)
 	value, _ := suite.vm.theStack.Pop()
 	suite.Equal(uint16(0x345), value)
@@ -509,7 +512,11 @@ func (suite *Chip8TestSuite) TestJumpToSubroutineUpdatesProgramCounterAndPushesT
 
 func (suite *Chip8TestSuite) TestReturnFromSubroutine() {
 	suite.vm.theStack.Push(0xA12)
-	suite.vm.Load([]byte{0x00, 0xEE})
+
+	asm := NewAssembler()
+	asm.Return()
+
+	suite.vm.Load(asm.Assemble())
 	suite.vm.Run()
 	suite.Equal(uint16(0xA12), suite.vm.pc)
 }

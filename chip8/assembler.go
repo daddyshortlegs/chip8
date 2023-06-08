@@ -28,6 +28,28 @@ func (a *Assembler) Return() {
 	a.buildArray(0x00, 0xEE)
 }
 
+func (a *Assembler) SkipIfEqual(xRegister byte, value byte) {
+	instruction := 0x30 | xRegister
+	a.buildArray(instruction, value)
+}
+
+func (a *Assembler) SkipIfNotEqual(xRegister byte, value byte) {
+	instruction := 0x40 | xRegister
+	a.buildArray(instruction, value)
+}
+
+func (a *Assembler) SkipIfRegistersEqual(xRegister byte, yRegister byte) {
+	instruction := 0x50 | xRegister
+	second := (yRegister << 4) | 0
+	a.buildArray(instruction, second)
+}
+
+func (a *Assembler) SkipIfRegistersNotEqual(xRegister byte, yRegister byte) {
+	instruction := 0x90 | xRegister
+	second := (yRegister << 4) | 0
+	a.buildArray(instruction, second)
+}
+
 func (a *Assembler) SetRegister(index byte, value byte) {
 	a.buildArray(0x60+index, value)
 }

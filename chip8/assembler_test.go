@@ -33,6 +33,30 @@ func (suite *AssemblerTestSuite) TestReturn() {
 	suite.Equal([]byte{0x00, 0xEE}, theAssembler.Assemble())
 }
 
+func (suite *AssemblerTestSuite) TestSkipIfEqual() {
+	theAssembler := NewAssembler()
+	theAssembler.SkipIfEqual(1, 0xDD)
+	suite.Equal([]byte{0x31, 0xDD}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSkipIfNotEqual() {
+	theAssembler := NewAssembler()
+	theAssembler.SkipIfNotEqual(2, 0xCD)
+	suite.Equal([]byte{0x42, 0xCD}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSkipIfRegistersEqual() {
+	theAssembler := NewAssembler()
+	theAssembler.SkipIfRegistersEqual(3, 4)
+	suite.Equal([]byte{0x53, 0x40}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSkipIfRegistersNotEqual() {
+	theAssembler := NewAssembler()
+	theAssembler.SkipIfRegistersNotEqual(2, 7)
+	suite.Equal([]byte{0x92, 0x70}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestSetRegister0() {
 	theAssembler := NewAssembler()
 	theAssembler.SetRegister(0, 0x00)
