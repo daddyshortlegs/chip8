@@ -82,6 +82,30 @@ func (suite *AssemblerTestSuite) TestAddToRegister() {
 	suite.Equal([]byte{0x70, 0x33}, theAssembler.Assemble())
 }
 
+func (suite *AssemblerTestSuite) TestSet() {
+	theAssembler := NewAssembler()
+	theAssembler.Set(6, 1)
+	suite.Equal([]byte{0x86, 0x10}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestOr() {
+	theAssembler := NewAssembler()
+	theAssembler.Or(2, 3)
+	suite.Equal([]byte{0x82, 0x31}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestAnd() {
+	theAssembler := NewAssembler()
+	theAssembler.And(4, 5)
+	suite.Equal([]byte{0x84, 0x52}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestXor() {
+	theAssembler := NewAssembler()
+	theAssembler.Xor(2, 6)
+	suite.Equal([]byte{0x82, 0x63}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestIndexRegister() {
 	theAssembler := NewAssembler()
 	theAssembler.SetIndexRegister(0x123)

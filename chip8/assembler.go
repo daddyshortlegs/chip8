@@ -58,6 +58,30 @@ func (a *Assembler) AddToRegister(index byte, value byte) {
 	a.buildArray(0x70+index, value)
 }
 
+func (a *Assembler) Set(xRegister byte, yRegister byte) {
+	instruction := 0x80 | xRegister
+	second := (yRegister << 4) | 0
+	a.buildArray(instruction, second)
+}
+
+func (a *Assembler) Or(xRegister byte, yRegister byte) {
+	instruction := 0x80 | xRegister
+	second := (yRegister << 4) | 1
+	a.buildArray(instruction, second)
+}
+
+func (a *Assembler) And(xRegister byte, yRegister byte) {
+	instruction := 0x80 | xRegister
+	second := (yRegister << 4) | 2
+	a.buildArray(instruction, second)
+}
+
+func (a *Assembler) Xor(xRegister byte, yRegister byte) {
+	instruction := 0x80 | xRegister
+	second := (yRegister << 4) | 3
+	a.buildArray(instruction, second)
+}
+
 func (a *Assembler) SetIndexRegister(value uint16) {
 	instruction := 0xA0 | extractFirstByte(value)
 	a.buildArray(instruction, extractSecondByte(value))
