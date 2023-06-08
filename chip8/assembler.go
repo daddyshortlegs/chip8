@@ -93,8 +93,37 @@ func (a *Assembler) SetIndexRegister(value uint16) {
 	a.buildArray(instruction, extractSecondByte(value))
 }
 
+func (a *Assembler) SetJumpWithOffset(address uint16) {
+	instruction := 0xB0 | extractFirstByte(address)
+	a.buildArray(instruction, extractSecondByte(address))
+}
+
+func (a *Assembler) Random(xRegister byte, value byte) {
+	a.buildArray(0xC0+xRegister, value)
+}
+
 func (a *Assembler) Display(xRegister byte, yRegister byte, n byte) {
 	a.buildArray(0xD0+xRegister, (yRegister<<4)|n)
+}
+
+func (a *Assembler) SkipIfKeyPressed(xRegister byte) {
+	a.buildArray(0xE0+xRegister, 0x9E)
+}
+
+func (a *Assembler) SkipIfKeyNotPressed(xRegister byte) {
+	a.buildArray(0xE0+xRegister, 0xA1)
+}
+
+func (a *Assembler) GetDelayTimer(xRegister byte) {
+	a.buildArray(0xF0+xRegister, 0x07)
+}
+
+func (a *Assembler) SetDelayTimer(xRegister byte) {
+	a.buildArray(0xF0+xRegister, 0x15)
+}
+
+func (a *Assembler) SetSoundTimer(xRegister byte) {
+	a.buildArray(0xF0+xRegister, 0x18)
 }
 
 func (a *Assembler) GetKey(xRegister byte) {

@@ -142,11 +142,55 @@ func (suite *AssemblerTestSuite) TestIndexRegister() {
 	suite.Equal([]byte{0xA1, 0x23}, theAssembler.Assemble())
 }
 
-func (suite *AssemblerTestSuite) TestDraw() {
+func (suite *AssemblerTestSuite) TestJumpWithOffset() {
+	theAssembler := NewAssembler()
+	theAssembler.SetJumpWithOffset(0x39A)
+	suite.Equal([]byte{0xB3, 0x9A}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestRandom() {
+	theAssembler := NewAssembler()
+	theAssembler.Random(2, 0x66)
+	suite.Equal([]byte{0xC2, 0x66}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestDisplay() {
 	theAssembler := NewAssembler()
 	theAssembler.Display(6, 4, 5)
 	suite.Equal([]byte{0xD6, 0x45}, theAssembler.Assemble())
 }
+
+func (suite *AssemblerTestSuite) TestSkipIfKeyPressed() {
+	theAssembler := NewAssembler()
+	theAssembler.SkipIfKeyPressed(2)
+	suite.Equal([]byte{0xE2, 0x9E}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSkipIfKeyNotPressed() {
+	theAssembler := NewAssembler()
+	theAssembler.SkipIfKeyNotPressed(4)
+	suite.Equal([]byte{0xE4, 0xA1}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestGetDelayTimer() {
+	theAssembler := NewAssembler()
+	theAssembler.GetDelayTimer(4)
+	suite.Equal([]byte{0xF4, 0x07}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSetDelayTimer() {
+	theAssembler := NewAssembler()
+	theAssembler.SetDelayTimer(1)
+	suite.Equal([]byte{0xF1, 0x15}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSetSoundTimer() {
+	theAssembler := NewAssembler()
+	theAssembler.SetSoundTimer(3)
+	suite.Equal([]byte{0xF3, 0x18}, theAssembler.Assemble())
+}
+
+// TODO: Add to index
 
 func (suite *AssemblerTestSuite) TestGetKey() {
 	theAssembler := NewAssembler()
