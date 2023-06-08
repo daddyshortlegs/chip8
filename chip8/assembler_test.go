@@ -34,6 +34,12 @@ func (suite *AssemblerTestSuite) TestIndexRegister() {
 	suite.Equal([]byte{0xA1, 0x23}, theAssembler.Assemble())
 }
 
+func (suite *AssemblerTestSuite) TestAddToRegister() {
+	theAssembler := NewAssembler()
+	theAssembler.AddToRegister(0, 0x33)
+	suite.Equal([]byte{0x70, 0x33}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestDraw() {
 	theAssembler := NewAssembler()
 	theAssembler.Display(6, 4, 5)

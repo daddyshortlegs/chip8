@@ -14,6 +14,10 @@ func (a *Assembler) SetRegister(index byte, value byte) {
 	a.buildArray(0x60+index, value)
 }
 
+func (a *Assembler) AddToRegister(index byte, value byte) {
+	a.buildArray(0x70+index, value)
+}
+
 func (a *Assembler) SetIndexRegister(value uint16) {
 	instruction := 0xA0 | extractFirstByte(value)
 	a.buildArray(instruction, extractSecondByte(value))

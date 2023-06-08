@@ -78,36 +78,51 @@ func (suite *Chip8TestSuite) executeInstruction(data []byte) {
 }
 
 func (suite *Chip8TestSuite) TestAddToRegister() {
-	suite.executeInstruction([]byte{AddRegister0, 0x0A})
+	asm := NewAssembler()
+	asm.AddToRegister(0, 0x0A)
+
+	suite.executeInstruction(asm.Assemble())
 	suite.Equal(byte(0x0A), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestSetAndAddToRegister() {
-	suite.executeInstruction([]byte{SetRegister0, 0x01, AddRegister0, 0x0A})
+	asm := NewAssembler()
+	asm.SetRegister(0, 0x01)
+	asm.AddToRegister(0, 0x0A)
+
+	suite.executeInstruction(asm.Assemble())
 	suite.Equal(byte(0x0B), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestSetIndexRegister() {
-	suite.executeInstruction([]byte{0xA0, 0x0A})
+	asm := NewAssembler()
+	asm.SetIndexRegister(0x0A)
+
+	suite.executeInstruction(asm.Assemble())
 	suite.Equal(uint16(0x0A), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestSetIndexRegisterWith12BitValue() {
-	suite.executeInstruction([]byte{0xAF, 0xFF})
+	asm := NewAssembler()
+	asm.SetIndexRegister(0xFFF)
+
+	suite.executeInstruction(asm.Assemble())
 	suite.Equal(uint16(0xFFF), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestSetJumpToAddress() {
 	asm := NewAssembler()
 	asm.Jump(0x300)
-	byteCode := asm.Assemble()
 
-	suite.executeInstruction(byteCode)
+	suite.executeInstruction(asm.Assemble())
 	suite.Equal(uint16(0x300), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestClearScreen() {
-	suite.vm.Load([]byte{0x00, 0xE0})
+	asm := NewAssembler()
+	asm.ClearScreen()
+
+	suite.vm.Load(asm.Assemble())
 	suite.vm.Run()
 
 	suite.True(suite.mockDisplay.screenCleared)
