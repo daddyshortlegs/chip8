@@ -106,6 +106,24 @@ func (suite *AssemblerTestSuite) TestXor() {
 	suite.Equal([]byte{0x82, 0x63}, theAssembler.Assemble())
 }
 
+func (suite *AssemblerTestSuite) TestAdd() {
+	theAssembler := NewAssembler()
+	theAssembler.Add(1, 5)
+	suite.Equal([]byte{0x81, 0x54}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSubtract() {
+	theAssembler := NewAssembler()
+	theAssembler.Subtract(6, 5)
+	suite.Equal([]byte{0x86, 0x55}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSubtractLast() {
+	theAssembler := NewAssembler()
+	theAssembler.SubtractLast(1, 2)
+	suite.Equal([]byte{0x81, 0x27}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestIndexRegister() {
 	theAssembler := NewAssembler()
 	theAssembler.SetIndexRegister(0x123)

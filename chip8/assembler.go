@@ -29,57 +29,55 @@ func (a *Assembler) Return() {
 }
 
 func (a *Assembler) SkipIfEqual(xRegister byte, value byte) {
-	instruction := 0x30 | xRegister
-	a.buildArray(instruction, value)
+	a.buildArray(0x30+xRegister, value)
 }
 
 func (a *Assembler) SkipIfNotEqual(xRegister byte, value byte) {
-	instruction := 0x40 | xRegister
-	a.buildArray(instruction, value)
+	a.buildArray(0x40+xRegister, value)
 }
 
 func (a *Assembler) SkipIfRegistersEqual(xRegister byte, yRegister byte) {
-	instruction := 0x50 | xRegister
-	second := (yRegister << 4) | 0
-	a.buildArray(instruction, second)
+	a.buildArray(0x50+xRegister, (yRegister<<4)|0)
 }
 
 func (a *Assembler) SkipIfRegistersNotEqual(xRegister byte, yRegister byte) {
-	instruction := 0x90 | xRegister
-	second := (yRegister << 4) | 0
-	a.buildArray(instruction, second)
+	a.buildArray(0x90+xRegister, (yRegister<<4)|0)
 }
 
-func (a *Assembler) SetRegister(index byte, value byte) {
-	a.buildArray(0x60+index, value)
+func (a *Assembler) SetRegister(xRegister byte, value byte) {
+	a.buildArray(0x60+xRegister, value)
 }
 
-func (a *Assembler) AddToRegister(index byte, value byte) {
-	a.buildArray(0x70+index, value)
+func (a *Assembler) AddToRegister(xRegister byte, value byte) {
+	a.buildArray(0x70+xRegister, value)
 }
 
 func (a *Assembler) Set(xRegister byte, yRegister byte) {
-	instruction := 0x80 | xRegister
-	second := (yRegister << 4) | 0
-	a.buildArray(instruction, second)
+	a.buildArray(0x80+xRegister, (yRegister<<4)|0)
 }
 
 func (a *Assembler) Or(xRegister byte, yRegister byte) {
-	instruction := 0x80 | xRegister
-	second := (yRegister << 4) | 1
-	a.buildArray(instruction, second)
+	a.buildArray(0x80+xRegister, (yRegister<<4)|1)
 }
 
 func (a *Assembler) And(xRegister byte, yRegister byte) {
-	instruction := 0x80 | xRegister
-	second := (yRegister << 4) | 2
-	a.buildArray(instruction, second)
+	a.buildArray(0x80+xRegister, (yRegister<<4)|2)
 }
 
 func (a *Assembler) Xor(xRegister byte, yRegister byte) {
-	instruction := 0x80 | xRegister
-	second := (yRegister << 4) | 3
-	a.buildArray(instruction, second)
+	a.buildArray(0x80+xRegister, (yRegister<<4)|3)
+}
+
+func (a *Assembler) Add(xRegister byte, yRegister byte) {
+	a.buildArray(0x80+xRegister, (yRegister<<4)|4)
+}
+
+func (a *Assembler) Subtract(xRegister byte, yRegister byte) {
+	a.buildArray(0x80+xRegister, (yRegister<<4)|5)
+}
+
+func (a *Assembler) SubtractLast(xRegister byte, yRegister byte) {
+	a.buildArray(0x80+xRegister, (yRegister<<4)|7)
 }
 
 func (a *Assembler) SetIndexRegister(value uint16) {
@@ -88,12 +86,11 @@ func (a *Assembler) SetIndexRegister(value uint16) {
 }
 
 func (a *Assembler) Display(xRegister byte, yRegister byte, n byte) {
-	second := (yRegister << 4) | n
-	a.buildArray(0xD0|xRegister, second)
+	a.buildArray(0xD0+xRegister, (yRegister<<4)|n)
 }
 
 func (a *Assembler) GetKey(xRegister byte) {
-	a.buildArray(0xF0|xRegister, 0x0A)
+	a.buildArray(0xF0+xRegister, 0x0A)
 }
 
 func (a *Assembler) buildArray(key byte, value byte) {
