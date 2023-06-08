@@ -124,6 +124,18 @@ func (suite *AssemblerTestSuite) TestSubtractLast() {
 	suite.Equal([]byte{0x81, 0x27}, theAssembler.Assemble())
 }
 
+func (suite *AssemblerTestSuite) TestShiftRight() {
+	theAssembler := NewAssembler()
+	theAssembler.ShiftRight(0, 2)
+	suite.Equal([]byte{0x80, 0x26}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestShiftLeft() {
+	theAssembler := NewAssembler()
+	theAssembler.ShiftLeft(1, 2)
+	suite.Equal([]byte{0x81, 0x2E}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestIndexRegister() {
 	theAssembler := NewAssembler()
 	theAssembler.SetIndexRegister(0x123)

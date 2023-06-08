@@ -80,6 +80,14 @@ func (a *Assembler) SubtractLast(xRegister byte, yRegister byte) {
 	a.buildArray(0x80+xRegister, (yRegister<<4)|7)
 }
 
+func (a *Assembler) ShiftRight(xRegister byte, yRegister byte) {
+	a.buildArray(0x80+xRegister, (yRegister<<4)|6)
+}
+
+func (a *Assembler) ShiftLeft(xRegister byte, yRegister byte) {
+	a.buildArray(0x80+xRegister, (yRegister<<4)|0xE)
+}
+
 func (a *Assembler) SetIndexRegister(value uint16) {
 	instruction := 0xA0 | extractFirstByte(value)
 	a.buildArray(instruction, extractSecondByte(value))
