@@ -10,6 +10,24 @@ func NewAssembler() *Assembler {
 	return a
 }
 
+func (a *Assembler) ClearScreen() {
+	a.buildArray(0x00, 0xE0)
+}
+
+func (a *Assembler) Jump(address uint16) {
+	instruction := 0x10 | extractFirstByte(address)
+	a.buildArray(instruction, extractSecondByte(address))
+}
+
+func (a *Assembler) Sub(address uint16) {
+	instruction := 0x20 | extractFirstByte(address)
+	a.buildArray(instruction, extractSecondByte(address))
+}
+
+func (a *Assembler) Return() {
+	a.buildArray(0x00, 0xEE)
+}
+
 func (a *Assembler) SetRegister(index byte, value byte) {
 	a.buildArray(0x60+index, value)
 }
@@ -30,15 +48,6 @@ func (a *Assembler) Display(xRegister byte, yRegister byte, n byte) {
 
 func (a *Assembler) GetKey(xRegister byte) {
 	a.buildArray(0xF0|xRegister, 0x0A)
-}
-
-func (a *Assembler) ClearScreen() {
-	a.buildArray(0x00, 0xE0)
-}
-
-func (a *Assembler) Jump(address uint16) {
-	instruction := 0x10 | extractFirstByte(address)
-	a.buildArray(instruction, extractSecondByte(address))
 }
 
 func (a *Assembler) buildArray(key byte, value byte) {

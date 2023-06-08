@@ -9,6 +9,30 @@ type AssemblerTestSuite struct {
 	suite.Suite
 }
 
+func (suite *AssemblerTestSuite) TestClearScreen() {
+	theAssembler := NewAssembler()
+	theAssembler.ClearScreen()
+	suite.Equal([]byte{0x00, 0xE0}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestJump() {
+	theAssembler := NewAssembler()
+	theAssembler.Jump(0x300)
+	suite.Equal([]byte{0x13, 0x00}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestSubroutine() {
+	theAssembler := NewAssembler()
+	theAssembler.Sub(0x643)
+	suite.Equal([]byte{0x26, 0x43}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestReturn() {
+	theAssembler := NewAssembler()
+	theAssembler.Return()
+	suite.Equal([]byte{0x00, 0xEE}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestSetRegister0() {
 	theAssembler := NewAssembler()
 	theAssembler.SetRegister(0, 0x00)
@@ -28,16 +52,16 @@ func (suite *AssemblerTestSuite) TestSetMultipleRegisters() {
 	suite.Equal([]byte{0x61, 0x10, 0x62, 0x22}, theAssembler.Assemble())
 }
 
-func (suite *AssemblerTestSuite) TestIndexRegister() {
-	theAssembler := NewAssembler()
-	theAssembler.SetIndexRegister(0x123)
-	suite.Equal([]byte{0xA1, 0x23}, theAssembler.Assemble())
-}
-
 func (suite *AssemblerTestSuite) TestAddToRegister() {
 	theAssembler := NewAssembler()
 	theAssembler.AddToRegister(0, 0x33)
 	suite.Equal([]byte{0x70, 0x33}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestIndexRegister() {
+	theAssembler := NewAssembler()
+	theAssembler.SetIndexRegister(0x123)
+	suite.Equal([]byte{0xA1, 0x23}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestDraw() {
@@ -50,18 +74,6 @@ func (suite *AssemblerTestSuite) TestGetKey() {
 	theAssembler := NewAssembler()
 	theAssembler.GetKey(5)
 	suite.Equal([]byte{0xF5, 0x0A}, theAssembler.Assemble())
-}
-
-func (suite *AssemblerTestSuite) TestClearScreen() {
-	theAssembler := NewAssembler()
-	theAssembler.ClearScreen()
-	suite.Equal([]byte{0x00, 0xE0}, theAssembler.Assemble())
-}
-
-func (suite *AssemblerTestSuite) TestJump() {
-	theAssembler := NewAssembler()
-	theAssembler.Jump(0x300)
-	suite.Equal([]byte{0x13, 0x00}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestProgram() {
