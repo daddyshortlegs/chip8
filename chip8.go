@@ -31,11 +31,15 @@ func andysProgram() []byte {
 	a := chip8.NewAssembler()
 
 	a.ClearScreen()
-	drawChar(a, 0, 0, 0x50)
-	drawChar(a, 5, 0, 0x55)
-	drawChar(a, 10, 0, 0x5A)
-	drawChar(a, 15, 0, 0x5F)
-	drawChar(a, 20, 0, 0x64)
+	//drawChar(a, 0, 0, 0x1)
+	//drawChar(a, 5, 0, 0x2)
+	//drawChar(a, 10, 0, 0x3)
+	//drawChar(a, 15, 0, 0x4)
+	//drawChar(a, 20, 0, 0x5)
+	//drawChar(a, 25, 0, 0xA)
+	drawChar(a, 0xB, 30, 0)
+	drawChar(a, 0xC, 35, 0)
+	drawChar(a, 0xD, 40, 0)
 
 	a.GetKey(3)
 	a.ClearScreen()
@@ -45,14 +49,11 @@ func andysProgram() []byte {
 	return a.Assemble()
 }
 
-func drawChar(a *chip8.Assembler, xPosition int, yPosition int, startAddress int) {
-	drawAtFromAddress(a, xPosition, yPosition, startAddress, 5)
-}
+func drawChar(a *chip8.Assembler, char byte, xPosition int, yPosition int) {
+	a.SetRegister(0, char)
+	a.FontChar(0)
 
-func drawAtFromAddress(a *chip8.Assembler, xPosition int, yPosition int, startAddress int, pixelsHigh int) {
-	a.SetRegister(0, byte(xPosition))
-	a.SetRegister(1, byte(yPosition))
-
-	a.SetIndexRegister(uint16(startAddress))
-	a.Display(0, 1, byte(pixelsHigh))
+	a.SetRegister(1, byte(xPosition))
+	a.SetRegister(2, byte(yPosition))
+	a.Display(1, 2, byte(5))
 }

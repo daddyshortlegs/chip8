@@ -190,12 +190,40 @@ func (suite *AssemblerTestSuite) TestSetSoundTimer() {
 	suite.Equal([]byte{0xF3, 0x18}, theAssembler.Assemble())
 }
 
-// TODO: Add to index
+func (suite *AssemblerTestSuite) TestAddToIndex() {
+	theAssembler := NewAssembler()
+	theAssembler.AddToIndex(5)
+	suite.Equal([]byte{0xF5, 0x1E}, theAssembler.Assemble())
+}
 
 func (suite *AssemblerTestSuite) TestGetKey() {
 	theAssembler := NewAssembler()
 	theAssembler.GetKey(5)
 	suite.Equal([]byte{0xF5, 0x0A}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestFontChar() {
+	theAssembler := NewAssembler()
+	theAssembler.FontChar(7)
+	suite.Equal([]byte{0xF7, 0x29}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestBCD() {
+	theAssembler := NewAssembler()
+	theAssembler.BCD(6)
+	suite.Equal([]byte{0xF6, 0x33}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestStore() {
+	theAssembler := NewAssembler()
+	theAssembler.Store(4)
+	suite.Equal([]byte{0xF4, 0x55}, theAssembler.Assemble())
+}
+
+func (suite *AssemblerTestSuite) TestLoad() {
+	theAssembler := NewAssembler()
+	theAssembler.Load(3)
+	suite.Equal([]byte{0xF3, 0x65}, theAssembler.Assemble())
 }
 
 func (suite *AssemblerTestSuite) TestProgram() {

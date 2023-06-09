@@ -126,8 +126,28 @@ func (a *Assembler) SetSoundTimer(xRegister byte) {
 	a.buildArray(0xF0+xRegister, 0x18)
 }
 
+func (a *Assembler) AddToIndex(xRegister byte) {
+	a.buildArray(0xF0+xRegister, 0x1E)
+}
+
 func (a *Assembler) GetKey(xRegister byte) {
 	a.buildArray(0xF0+xRegister, 0x0A)
+}
+
+func (a *Assembler) FontChar(xRegister byte) {
+	a.buildArray(0xF0+xRegister, 0x29)
+}
+
+func (a *Assembler) BCD(xRegister byte) {
+	a.buildArray(0xF0+xRegister, 0x33)
+}
+
+func (a *Assembler) Store(xRegister byte) {
+	a.buildArray(0xF0+xRegister, 0x55)
+}
+
+func (a *Assembler) Load(xRegister byte) {
+	a.buildArray(0xF0+xRegister, 0x65)
 }
 
 func (a *Assembler) buildArray(key byte, value byte) {
