@@ -9,7 +9,7 @@ type VM struct {
 	registers           [16]byte
 	indexRegister       uint16
 	pc                  uint16
-	pc_incrementer      int
+	pcIncrementer       int
 	display             DisplayInterface
 	processInstructions bool
 	xCoord              byte
@@ -26,7 +26,7 @@ func NewVM(display DisplayInterface, random Random) *VM {
 	vm.display = display
 	vm.random = random
 	vm.pc = 0x200
-	vm.pc_incrementer = 2
+	vm.pcIncrementer = 2
 	vm.theStack = new(stack)
 	vm.processInstructions = true
 	font := createFont()
@@ -85,24 +85,24 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	i := instruction{instr}
 	opCode, vx, vy, opcode2 := i.extractNibbles()
 
-	v.pc_incrementer = 2
+	v.pcIncrementer = 2
 
 	if instr == ClearScreen {
-		v.clearScreen()
+		v.clearScreen(instr)
 	} else if instr == Return {
-		v.opReturn()
+		v.opReturn(instr)
 	} else if opCode == Jump {
 		v.jump(instr)
 	} else if opCode == Subroutine {
 		v.subroutine(instr)
 	} else if opCode == SkipIfEqual {
-		v.skipIfEqual(vx, instr)
+		v.skipIfEqual(instr)
 	} else if opCode == SkipIfNotEqual {
-		v.skipIfNotEqual(vx, instr)
+		v.skipIfNotEqual(instr)
 	} else if opCode == SkipIfRegistersEqual {
-		v.skipIfRegistersEqual(vx, vy)
+		v.skipIfRegistersEqual(instr)
 	} else if opCode == SkipIfRegistersNotEqual {
-		v.skipIfRegistersNotEqual(vx, vy)
+		v.skipIfRegistersNotEqual(instr)
 	} else if opCode == SetRegister {
 		v.setRegister(instr)
 	} else if opCode == AddToRegister {
@@ -117,7 +117,7 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	} else if opCode == Random {
 		v.opRandom(instr)
 	} else if opCode == Display {
-		v.opDisplay(opcode2, vx, vy)
+		v.opDisplay(instr)
 	} else if opCode == FurtherOperations {
 		const Bcd = 0x33
 		const FontChar = 0x29
@@ -146,7 +146,10 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	return false
 }
 
-func (v *VM) opDisplay(opcode2 byte, vx byte, vy byte) {
+func (v *VM) opDisplay(instr uint16) {
+	i := instruction{instr}
+	_, vx, vy, opcode2 := i.extractNibbles()
+
 	heightInPixels := opcode2
 
 	v.xCoord = v.registers[vx] & 63
@@ -158,16 +161,17 @@ func (v *VM) opDisplay(opcode2 byte, vx byte, vy byte) {
 }
 
 func (v *VM) opRandom(instr uint16) {
+	i := instruction{instr}
+	_, vx, _, _ := i.extractNibbles()
+
 	randomNumber := v.random.Generate()
-	firstByte := extractFirstByte(instr)
-	index := getRightNibble(firstByte)
 	secondByte := extractSecondByte(instr)
-	v.registers[index] = randomNumber & secondByte
+	v.registers[vx] = randomNumber & secondByte
 }
 
 func (v *VM) jumpWithOffset(instr uint16) {
 	v.pc = uint16(v.registers[0]) + extract12BitNumber(instr)
-	v.pc_incrementer = 0
+	v.pcIncrementer = 0
 	fmt.Printf("Jump with offset to %X\n", v.pc)
 }
 
@@ -175,25 +179,37 @@ func (v *VM) setIndexRegister(instr uint16) {
 	v.indexRegister = extract12BitNumber(instr)
 }
 
-func (v *VM) skipIfRegistersNotEqual(vx byte, vy byte) {
+func (v *VM) skipIfRegistersNotEqual(instr uint16) {
+	i := instruction{instr}
+	_, vx, vy, _ := i.extractNibbles()
+
 	if v.registers[vx] != v.registers[vy] {
 		v.pc += 2
 	}
 }
 
-func (v *VM) skipIfRegistersEqual(vx byte, vy byte) {
+func (v *VM) skipIfRegistersEqual(instr uint16) {
+	i := instruction{instr}
+	_, vx, vy, _ := i.extractNibbles()
+
 	if v.registers[vx] == v.registers[vy] {
 		v.pc += 2
 	}
 }
 
-func (v *VM) skipIfNotEqual(vx byte, instr uint16) {
+func (v *VM) skipIfNotEqual(instr uint16) {
+	i := instruction{instr}
+	_, vx, _, _ := i.extractNibbles()
+
 	if v.registers[vx] != extractSecondByte(instr) {
 		v.pc += 2
 	}
 }
 
-func (v *VM) skipIfEqual(vx byte, instr uint16) {
+func (v *VM) skipIfEqual(instr uint16) {
+	i := instruction{instr}
+	_, vx, _, _ := i.extractNibbles()
+
 	if v.registers[vx] == extractSecondByte(instr) {
 		v.pc += 2
 	}
@@ -204,24 +220,24 @@ func (v *VM) subroutine(instr uint16) {
 	v.pc = address
 	fmt.Printf("Jump to %X\n", v.pc)
 	v.theStack.Push(address)
-	v.pc_incrementer = 0
+	v.pcIncrementer = 0
 }
 
 func (v *VM) jump(instr uint16) {
 	v.pc = extract12BitNumber(instr)
 	fmt.Printf("Jump to %X\n", v.pc)
-	v.pc_incrementer = 0
+	v.pcIncrementer = 0
 }
 
-func (v *VM) opReturn() {
+func (v *VM) opReturn(uint16) {
 	address, _ := v.theStack.Pop()
 	v.pc = address
 	fmt.Printf("Stack popped %X\n", v.pc)
 
-	v.pc_incrementer = 0
+	v.pcIncrementer = 0
 }
 
-func (v *VM) clearScreen() {
+func (v *VM) clearScreen(uint16) {
 	println("ClearScreen")
 	v.display.ClearScreen()
 }
@@ -355,7 +371,7 @@ func (v *VM) fetch() uint16 {
 
 func (v *VM) fetchAndIncrement() uint16 {
 	i := bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
-	v.pc += uint16(v.pc_incrementer)
+	v.pc += uint16(v.pcIncrementer)
 	return i
 }
 
