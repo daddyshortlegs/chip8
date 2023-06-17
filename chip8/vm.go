@@ -78,30 +78,29 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	const Display = 0xD
 	const FurtherOperations = 0xF
 
-	//mOps := map[byte]opcodes{
-	//	ClearScreen:             v.clearScreen,
-	//	Return:                  v.opReturn,
-	//	Jump:                    v.jump,
-	//	Subroutine:              v.subroutine,
-	//	SkipIfEqual:             v.skipIfEqual,
-	//	SkipIfNotEqual:          v.skipIfNotEqual,
-	//	SkipIfRegistersEqual:    v.skipIfRegistersEqual,
-	//	SkipIfRegistersNotEqual: v.skipIfRegistersNotEqual,
-	//	SetRegister:             v.setRegister,
-	//	AddToRegister:           v.addToRegister,
-	//	SetIndexRegister:        v.setIndexRegister,
-	//	JumpWithOffset:          v.jumpWithOffset,
-	//	Random:                  v.opRandom,
-	//	Display:                 v.opDisplay,
-	//}
+	mOps := map[byte]opcodes{
+		ClearScreen:             v.clearScreen,
+		Return:                  v.opReturn,
+		Jump:                    v.jump,
+		Subroutine:              v.subroutine,
+		SkipIfEqual:             v.skipIfEqual,
+		SkipIfNotEqual:          v.skipIfNotEqual,
+		SkipIfRegistersEqual:    v.skipIfRegistersEqual,
+		SkipIfRegistersNotEqual: v.skipIfRegistersNotEqual,
+		SetRegister:             v.setRegister,
+		AddToRegister:           v.addToRegister,
+		SetIndexRegister:        v.setIndexRegister,
+		JumpWithOffset:          v.jumpWithOffset,
+		Random:                  v.opRandom,
+		Display:                 v.opDisplay,
+		BitwiseOperations:       v.executeArthimeticInstrucions,
+		FurtherOperations:       v.furtherOperations,
+	}
 
 	instr := v.fetchAndIncrement()
 	if instr == 0x0000 {
 		return true
 	}
-
-	i := instruction{instr}
-	opCode, _, _, _ := i.extractNibbles()
 
 	v.pcIncrementer = 2
 
@@ -109,34 +108,11 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 		v.clearScreen(instr)
 	} else if instr == Return {
 		v.opReturn(instr)
-	} else if opCode == Jump {
-		v.jump(instr)
-	} else if opCode == Subroutine {
-		v.subroutine(instr)
-	} else if opCode == SkipIfEqual {
-		v.skipIfEqual(instr)
-	} else if opCode == SkipIfNotEqual {
-		v.skipIfNotEqual(instr)
-	} else if opCode == SkipIfRegistersEqual {
-		v.skipIfRegistersEqual(instr)
-	} else if opCode == SkipIfRegistersNotEqual {
-		v.skipIfRegistersNotEqual(instr)
-	} else if opCode == SetRegister {
-		v.setRegister(instr)
-	} else if opCode == AddToRegister {
-		v.addToRegister(instr)
-	} else if opCode == BitwiseOperations {
-		v.executeArthimeticInstrucions(instr)
-	} else if opCode == SetIndexRegister {
-		v.setIndexRegister(instr)
-	} else if opCode == JumpWithOffset {
-		v.jumpWithOffset(instr)
-	} else if opCode == Random {
-		v.opRandom(instr)
-	} else if opCode == Display {
-		v.opDisplay(instr)
-	} else if opCode == FurtherOperations {
-		v.furtherOperations(instr)
+	} else {
+		i := instruction{instr}
+		opCode, _, _, _ := i.extractNibbles()
+
+		mOps[opCode](instr)
 	}
 	return false
 }
