@@ -196,3 +196,91 @@ func (i *instruction) executeArithmeticInstructions(instr uint16, v *VM) {
 		v.registers[i.vx] = v.registers[i.vy] << 1
 	}
 }
+
+func (i *instruction) furtherOperations(instr uint16, v *VM) {
+	const Bcd = 0x33
+	const FontChar = 0x29
+	const GetKey = 0x0A
+	const AddToIndex = 0x1E
+	const Store = 0x55
+	const Load = 0x65
+	const GetDelayTimer = 0x07
+	const SetDelayTimer = 0x15
+	const SetSoundTimer = 0x18
+
+	m := map[byte]furtherOpcodes{
+		Bcd:           i.bcd,
+		FontChar:      i.fontChar,
+		GetKey:        i.getKey,
+		AddToIndex:    i.addToIndex,
+		Store:         i.store,
+		Load:          i.load,
+		GetDelayTimer: i.getDelayTimer,
+		SetDelayTimer: i.setDelayTimer,
+		SetSoundTimer: i.setSoundTimer,
+	}
+
+	m[extractSecondByte(instr)](i.vx, v)
+}
+
+func (i *instruction) bcd(vx byte, v *VM) {
+	value := v.registers[vx]
+	hundreds, tens, ones := splitNumberIntoUnits(value)
+
+	address := v.indexRegister
+	v.Memory[address] = hundreds
+	v.Memory[address+1] = tens
+	v.Memory[address+2] = ones
+}
+
+func (i *instruction) fontChar(vx byte, v *VM) {
+	character := v.registers[vx]
+	v.indexRegister = 0x50 + uint16(character*5)
+}
+
+func (i *instruction) getKey(vx byte, v *VM) {
+	// If we get a key then suspend processing of further opcodes
+	v.processInstructions = false
+	key := v.display.GetKey()
+	v.registers[vx] = byte(key)
+	fmt.Printf("key returned is %d\n", key)
+}
+
+func (i *instruction) addToIndex(vx byte, v *VM) {
+	v.indexRegister += uint16(v.registers[vx])
+}
+
+func (i *instruction) store(vx byte, v *VM) {
+	max := int(vx)
+	startMemory := v.indexRegister
+	for i := 0; i <= max; i++ {
+		v.Memory[startMemory] = v.registers[i]
+		startMemory++
+	}
+}
+
+func (i *instruction) load(vx byte, v *VM) {
+	startMemory := v.indexRegister
+	for i := 0; i <= int(vx); i++ {
+		v.registers[i] = v.Memory[startMemory]
+		startMemory++
+	}
+}
+
+func (i *instruction) getDelayTimer(vx byte, v *VM) {
+	// TODO: Test
+	// FX07 sets VX to value of the delay timer
+	v.registers[vx] = v.delayTimer.timer
+}
+
+func (i *instruction) setDelayTimer(vx byte, v *VM) {
+	// TODO: Test
+	// FX15 set the delay timer to value in VX
+	v.delayTimer.timer = v.registers[vx]
+}
+
+func (i *instruction) setSoundTimer(vx byte, v *VM) {
+	// TODO: Test
+	// FX18 sets sound timer to value in VX
+	println("vx = ", vx)
+}
