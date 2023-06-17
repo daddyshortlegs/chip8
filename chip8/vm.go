@@ -19,6 +19,7 @@ type VM struct {
 	delayTimer          *DelayTimer
 }
 
+type opcodes func(uint16)
 type furtherOpcodes func(byte)
 
 func NewVM(display DisplayInterface, random Random) *VM {
@@ -77,13 +78,30 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	const Display = 0xD
 	const FurtherOperations = 0xF
 
+	//mOps := map[byte]opcodes{
+	//	ClearScreen:             v.clearScreen,
+	//	Return:                  v.opReturn,
+	//	Jump:                    v.jump,
+	//	Subroutine:              v.subroutine,
+	//	SkipIfEqual:             v.skipIfEqual,
+	//	SkipIfNotEqual:          v.skipIfNotEqual,
+	//	SkipIfRegistersEqual:    v.skipIfRegistersEqual,
+	//	SkipIfRegistersNotEqual: v.skipIfRegistersNotEqual,
+	//	SetRegister:             v.setRegister,
+	//	AddToRegister:           v.addToRegister,
+	//	SetIndexRegister:        v.setIndexRegister,
+	//	JumpWithOffset:          v.jumpWithOffset,
+	//	Random:                  v.opRandom,
+	//	Display:                 v.opDisplay,
+	//}
+
 	instr := v.fetchAndIncrement()
 	if instr == 0x0000 {
 		return true
 	}
 
 	i := instruction{instr}
-	opCode, vx, vy, opcode2 := i.extractNibbles()
+	opCode, _, _, _ := i.extractNibbles()
 
 	v.pcIncrementer = 2
 
@@ -108,42 +126,48 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	} else if opCode == AddToRegister {
 		v.addToRegister(instr)
 	} else if opCode == BitwiseOperations {
-		v.executeArthimeticInstrucions(opcode2, vx, vy)
+		v.executeArthimeticInstrucions(instr)
 	} else if opCode == SetIndexRegister {
 		v.setIndexRegister(instr)
 	} else if opCode == JumpWithOffset {
 		v.jumpWithOffset(instr)
-
 	} else if opCode == Random {
 		v.opRandom(instr)
 	} else if opCode == Display {
 		v.opDisplay(instr)
 	} else if opCode == FurtherOperations {
-		const Bcd = 0x33
-		const FontChar = 0x29
-		const GetKey = 0x0A
-		const AddToIndex = 0x1E
-		const Store = 0x55
-		const Load = 0x65
-		const GetDelayTimer = 0x07
-		const SetDelayTimer = 0x15
-		const SetSoundTimer = 0x18
-
-		m := map[byte]furtherOpcodes{
-			Bcd:           v.bcd,
-			FontChar:      v.fontChar,
-			GetKey:        v.getKey,
-			AddToIndex:    v.addToIndex,
-			Store:         v.store,
-			Load:          v.load,
-			GetDelayTimer: v.getDelayTimer,
-			SetDelayTimer: v.setDelayTimer,
-			SetSoundTimer: v.setSoundTimer,
-		}
-
-		m[extractSecondByte(instr)](vx)
+		v.furtherOperations(instr)
 	}
 	return false
+}
+
+func (v *VM) furtherOperations(instr uint16) {
+	i := instruction{instr}
+	_, vx, _, _ := i.extractNibbles()
+
+	const Bcd = 0x33
+	const FontChar = 0x29
+	const GetKey = 0x0A
+	const AddToIndex = 0x1E
+	const Store = 0x55
+	const Load = 0x65
+	const GetDelayTimer = 0x07
+	const SetDelayTimer = 0x15
+	const SetSoundTimer = 0x18
+
+	m := map[byte]furtherOpcodes{
+		Bcd:           v.bcd,
+		FontChar:      v.fontChar,
+		GetKey:        v.getKey,
+		AddToIndex:    v.addToIndex,
+		Store:         v.store,
+		Load:          v.load,
+		GetDelayTimer: v.getDelayTimer,
+		SetDelayTimer: v.setDelayTimer,
+		SetSoundTimer: v.setSoundTimer,
+	}
+
+	m[extractSecondByte(instr)](vx)
 }
 
 func (v *VM) opDisplay(instr uint16) {
@@ -304,7 +328,11 @@ func (v *VM) setSoundTimer(vx byte) {
 	println("vx = ", vx)
 }
 
-func (v *VM) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
+func (v *VM) executeArthimeticInstrucions(instr uint16) {
+
+	i := instruction{instr}
+	_, vx, vy, opcode2 := i.extractNibbles()
+
 	const setVxToVy = 0x0
 	const binaryOr = 0x1
 	const binaryAnd = 0x2
