@@ -15,26 +15,6 @@ type VM struct {
 	delayTimer          *DelayTimer
 }
 
-type opcodes func(uint16, *VM)
-type furtherOpcodes func(byte, *VM)
-
-const ClearScreen = 0x00E0
-const Return = 0x00EE
-const Jump = 0x1
-const Subroutine = 0x2
-const SkipIfEqual = 0x3
-const SkipIfNotEqual = 0x4
-const SkipIfRegistersEqual = 0x5
-const SkipIfRegistersNotEqual = 0x9
-const SetRegister = 0x6
-const AddToRegister = 0x7
-const BitwiseOperations = 0x8
-const SetIndexRegister = 0xA
-const JumpWithOffset = 0xB
-const OpRandom = 0xC
-const Display = 0xD
-const FurtherOperations = 0xF
-
 func NewVM(display DisplayInterface, random Random) *VM {
 	vm := new(VM)
 	vm.display = display
@@ -74,7 +54,6 @@ func (v *VM) Run() {
 }
 
 func (v *VM) fetchAndProcessInstruction() (quit bool) {
-
 	instr := v.fetchAndIncrement()
 	if instr == 0x0000 {
 		return true
