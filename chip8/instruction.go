@@ -121,15 +121,15 @@ func (i *Instruction) skipIfRegistersNotEqual(_ uint16, v *VM) {
 }
 
 func (i *Instruction) setRegister(instr uint16, v *VM) {
-	index, secondByte := extractIndexAndValue(instr)
-	fmt.Printf("SetRegister %d to %d\n", index, secondByte)
-	v.registers[index] = secondByte
+	_, secondByte := extractIndexAndValue(instr)
+	//fmt.Printf("SetRegister %d to %d\n", index, secondByte)
+	v.registers[i.vx] = secondByte
 }
 
 func (i *Instruction) addToRegister(instr uint16, v *VM) {
-	index, secondByte := extractIndexAndValue(instr)
-	fmt.Printf("Add To Register [%d] value %d\n", index, secondByte)
-	v.registers[index] += secondByte
+	_, secondByte := extractIndexAndValue(instr)
+	//fmt.Printf("Add To Register [%d] value %d\n", index, secondByte)
+	v.registers[i.vx] += secondByte
 }
 
 func extractIndexAndValue(instr uint16) (byte, byte) {
