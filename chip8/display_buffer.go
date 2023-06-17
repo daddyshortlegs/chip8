@@ -1,7 +1,5 @@
 package chip8
 
-import "fmt"
-
 type DisplayBuffer struct {
 	Pixels [][]byte
 }
@@ -29,7 +27,7 @@ func (d DisplayBuffer) DrawSprite(startAddress uint16, heightInPixels byte, x by
 
 func (d DisplayBuffer) drawByte(value byte, xpos byte, ypos byte) {
 	for index := 7; index >= 0; index-- {
-		fmt.Printf("Drawing at pos %d, %d\n", xpos, ypos)
+		//fmt.Printf("Drawing at pos %d, %d\n", xpos, ypos)
 		bit := GetValueAtPosition(index, value)
 		if bit == 1 {
 			if d.Pixels[ypos][xpos] == 1 {

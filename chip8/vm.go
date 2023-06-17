@@ -5,25 +5,28 @@ import (
 )
 
 type VM struct {
-	Memory                  [4096]byte
-	registers               [16]byte
-	indexRegister           uint16
-	pc                      uint16
-	display                 DisplayInterface
-	previousInstructionJump bool
-	processInstructions     bool
-	xCoord                  byte
-	yCoord                  byte
-	random                  Random
-	theStack                *stack
-	delayTimer              *DelayTimer
+	Memory              [4096]byte
+	registers           [16]byte
+	indexRegister       uint16
+	pc                  uint16
+	pc_incrementer      int
+	display             DisplayInterface
+	processInstructions bool
+	xCoord              byte
+	yCoord              byte
+	random              Random
+	theStack            *stack
+	delayTimer          *DelayTimer
 }
+
+type furtherOpcodes func(byte)
 
 func NewVM(display DisplayInterface, random Random) *VM {
 	vm := new(VM)
 	vm.display = display
 	vm.random = random
 	vm.pc = 0x200
+	vm.pc_incrementer = 2
 	vm.theStack = new(stack)
 	vm.processInstructions = true
 	font := createFont()
@@ -38,7 +41,6 @@ func (v *VM) Load(bytes []byte) {
 
 func (v *VM) Run() {
 	v.delayTimer.Start()
-	v.previousInstructionJump = false
 	for {
 		if v.processInstructions == true {
 			quit := v.fetchAndProcessInstruction()
@@ -58,7 +60,24 @@ func (v *VM) Run() {
 }
 
 func (v *VM) fetchAndProcessInstruction() (quit bool) {
-	instr := v.fetchNextInstruction()
+	const ClearScreen = 0x00E0
+	const Return = 0x00EE
+	const Jump = 0x1
+	const Subroutine = 0x2
+	const SkipIfEqual = 0x3
+	const SkipIfNotEqual = 0x4
+	const SkipIfRegistersEqual = 0x5
+	const SkipIfRegistersNotEqual = 0x9
+	const SetRegister = 0x6
+	const AddToRegister = 0x7
+	const BitwiseOperations = 0x8
+	const SetIndexRegister = 0xA
+	const JumpWithOffset = 0xB
+	const Random = 0xC
+	const Display = 0xD
+	const FurtherOperations = 0xF
+
+	instr := v.fetchAndIncrement()
 	if instr == 0x0000 {
 		return true
 	}
@@ -66,121 +85,207 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	i := instruction{instr}
 	opCode, vx, vy, opcode2 := i.extractNibbles()
 
-	if instr == 0x00E0 {
-		println("ClearScreen")
-		v.display.ClearScreen()
-	} else if instr == 0x00EE {
-		address, _ := v.theStack.Pop()
-		v.pc = address
-		v.previousInstructionJump = true
+	v.pc_incrementer = 2
 
-	} else if opCode == 0x1 {
-		v.pc = extract12BitNumber(instr)
-		fmt.Printf("Jump to %X\n", v.pc)
-		v.previousInstructionJump = true
-	} else if opCode == 0x2 {
-		address := extract12BitNumber(instr)
-		v.pc = address
-		fmt.Printf("Jump to %X\n", v.pc)
-		v.theStack.Push(address)
-		v.previousInstructionJump = true
-	} else if opCode == 0x3 {
-		if v.registers[vx] == extractSecondByte(instr) {
-			v.pc += 2
-		}
-	} else if opCode == 0x4 {
-		if v.registers[vx] != extractSecondByte(instr) {
-			v.pc += 2
-		}
-	} else if opCode == 0x5 {
-		if v.registers[vx] == v.registers[vy] {
-			v.pc += 2
-		}
-	} else if opCode == 0x9 {
-		if v.registers[vx] != v.registers[vy] {
-			v.pc += 2
-		}
-	} else if opCode == 0x6 {
+	if instr == ClearScreen {
+		v.clearScreen()
+	} else if instr == Return {
+		v.opReturn()
+	} else if opCode == Jump {
+		v.jump(instr)
+	} else if opCode == Subroutine {
+		v.subroutine(instr)
+	} else if opCode == SkipIfEqual {
+		v.skipIfEqual(vx, instr)
+	} else if opCode == SkipIfNotEqual {
+		v.skipIfNotEqual(vx, instr)
+	} else if opCode == SkipIfRegistersEqual {
+		v.skipIfRegistersEqual(vx, vy)
+	} else if opCode == SkipIfRegistersNotEqual {
+		v.skipIfRegistersNotEqual(vx, vy)
+	} else if opCode == SetRegister {
 		v.setRegister(instr)
-	} else if opCode == 0x7 {
+	} else if opCode == AddToRegister {
 		v.addToRegister(instr)
-	} else if opCode == 0x8 {
+	} else if opCode == BitwiseOperations {
 		v.executeArthimeticInstrucions(opcode2, vx, vy)
-	} else if opCode == 0xA {
-		v.indexRegister = extract12BitNumber(instr)
-		//fmt.Printf("Set Index Register %X\n", v.indexRegister)
-	} else if opCode == 0xB {
-		v.pc = uint16(v.registers[0]) + extract12BitNumber(instr)
-		v.previousInstructionJump = true
-	} else if opCode == 0xC {
-		randomNumber := v.random.Generate()
-		firstByte := extractFirstByte(instr)
-		index := getRightNibble(firstByte)
-		secondByte := extractSecondByte(instr)
-		v.registers[index] = randomNumber & secondByte
-	} else if opCode == 0xD {
-		heightInPixels := opcode2
+	} else if opCode == SetIndexRegister {
+		v.setIndexRegister(instr)
+	} else if opCode == JumpWithOffset {
+		v.jumpWithOffset(instr)
 
-		v.xCoord = v.registers[vx] & 63
-		v.yCoord = v.registers[vy] & 31
-		v.registers[15] = 0
+	} else if opCode == Random {
+		v.opRandom(instr)
+	} else if opCode == Display {
+		v.opDisplay(opcode2, vx, vy)
+	} else if opCode == FurtherOperations {
+		const Bcd = 0x33
+		const FontChar = 0x29
+		const GetKey = 0x0A
+		const AddToIndex = 0x1E
+		const Store = 0x55
+		const Load = 0x65
+		const GetDelayTimer = 0x07
+		const SetDelayTimer = 0x15
+		const SetSoundTimer = 0x18
 
-		//fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, heightInPixels)
-		v.display.DrawSprite(v.indexRegister, heightInPixels, v.xCoord, v.yCoord, v.Memory)
-	} else if opCode == 0xF {
-		secondByte := extractSecondByte(instr)
-
-		if secondByte == 0x33 {
-			value := v.registers[vx]
-			hundreds, tens, ones := splitNumberIntoUnits(value)
-
-			address := v.indexRegister
-			v.Memory[address] = hundreds
-			v.Memory[address+1] = tens
-			v.Memory[address+2] = ones
-
-		} else if secondByte == 0x29 {
-			character := v.registers[vx]
-			v.indexRegister = 0x50 + uint16(character*5)
-		} else if secondByte == 0x0A {
-			// If we get a key then suspend processing of further opcodes
-			v.processInstructions = false
-			key := v.display.GetKey()
-			v.registers[vx] = byte(key)
-			fmt.Printf("key returned is %d\n", key)
-		} else if secondByte == 0x1E {
-			v.indexRegister += uint16(v.registers[vx])
-		} else if secondByte == 0x55 {
-			max := int(vx)
-			startMemory := v.indexRegister
-			for i := 0; i <= max; i++ {
-				v.Memory[startMemory] = v.registers[i]
-				startMemory++
-			}
-		} else if secondByte == 0x65 {
-			startMemory := v.indexRegister
-			for i := 0; i <= int(vx); i++ {
-				v.registers[i] = v.Memory[startMemory]
-				startMemory++
-			}
-		} else if secondByte == 0x07 {
-			// TODO: Test
-			// FX07 sets VX to value of the delay timer
-			v.registers[vx] = v.delayTimer.timer
-		} else if secondByte == 0x15 {
-			// TODO: Test
-			// FX15 set the delay timer to value in VX
-			v.delayTimer.timer = v.registers[vx]
-		} else if secondByte == 0x18 {
-			// TODO: Test
-			// FX18 sets sound timer to value in VX
-
+		m := map[byte]furtherOpcodes{
+			Bcd:           v.bcd,
+			FontChar:      v.fontChar,
+			GetKey:        v.getKey,
+			AddToIndex:    v.addToIndex,
+			Store:         v.store,
+			Load:          v.load,
+			GetDelayTimer: v.getDelayTimer,
+			SetDelayTimer: v.setDelayTimer,
+			SetSoundTimer: v.setSoundTimer,
 		}
 
-	} else {
-		v.previousInstructionJump = false
+		m[extractSecondByte(instr)](vx)
 	}
 	return false
+}
+
+func (v *VM) opDisplay(opcode2 byte, vx byte, vy byte) {
+	heightInPixels := opcode2
+
+	v.xCoord = v.registers[vx] & 63
+	v.yCoord = v.registers[vy] & 31
+	v.registers[15] = 0
+
+	//fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, heightInPixels)
+	v.display.DrawSprite(v.indexRegister, heightInPixels, v.xCoord, v.yCoord, v.Memory)
+}
+
+func (v *VM) opRandom(instr uint16) {
+	randomNumber := v.random.Generate()
+	firstByte := extractFirstByte(instr)
+	index := getRightNibble(firstByte)
+	secondByte := extractSecondByte(instr)
+	v.registers[index] = randomNumber & secondByte
+}
+
+func (v *VM) jumpWithOffset(instr uint16) {
+	v.pc = uint16(v.registers[0]) + extract12BitNumber(instr)
+	v.pc_incrementer = 0
+	fmt.Printf("Jump with offset to %X\n", v.pc)
+}
+
+func (v *VM) setIndexRegister(instr uint16) {
+	v.indexRegister = extract12BitNumber(instr)
+}
+
+func (v *VM) skipIfRegistersNotEqual(vx byte, vy byte) {
+	if v.registers[vx] != v.registers[vy] {
+		v.pc += 2
+	}
+}
+
+func (v *VM) skipIfRegistersEqual(vx byte, vy byte) {
+	if v.registers[vx] == v.registers[vy] {
+		v.pc += 2
+	}
+}
+
+func (v *VM) skipIfNotEqual(vx byte, instr uint16) {
+	if v.registers[vx] != extractSecondByte(instr) {
+		v.pc += 2
+	}
+}
+
+func (v *VM) skipIfEqual(vx byte, instr uint16) {
+	if v.registers[vx] == extractSecondByte(instr) {
+		v.pc += 2
+	}
+}
+
+func (v *VM) subroutine(instr uint16) {
+	address := extract12BitNumber(instr)
+	v.pc = address
+	fmt.Printf("Jump to %X\n", v.pc)
+	v.theStack.Push(address)
+	v.pc_incrementer = 0
+}
+
+func (v *VM) jump(instr uint16) {
+	v.pc = extract12BitNumber(instr)
+	fmt.Printf("Jump to %X\n", v.pc)
+	v.pc_incrementer = 0
+}
+
+func (v *VM) opReturn() {
+	address, _ := v.theStack.Pop()
+	v.pc = address
+	fmt.Printf("Stack popped %X\n", v.pc)
+
+	v.pc_incrementer = 0
+}
+
+func (v *VM) clearScreen() {
+	println("ClearScreen")
+	v.display.ClearScreen()
+}
+
+func (v *VM) bcd(vx byte) {
+	value := v.registers[vx]
+	hundreds, tens, ones := splitNumberIntoUnits(value)
+
+	address := v.indexRegister
+	v.Memory[address] = hundreds
+	v.Memory[address+1] = tens
+	v.Memory[address+2] = ones
+}
+
+func (v *VM) fontChar(vx byte) {
+	character := v.registers[vx]
+	v.indexRegister = 0x50 + uint16(character*5)
+}
+
+func (v *VM) getKey(vx byte) {
+	// If we get a key then suspend processing of further opcodes
+	v.processInstructions = false
+	key := v.display.GetKey()
+	v.registers[vx] = byte(key)
+	fmt.Printf("key returned is %d\n", key)
+}
+
+func (v *VM) addToIndex(vx byte) {
+	v.indexRegister += uint16(v.registers[vx])
+}
+
+func (v *VM) store(vx byte) {
+	max := int(vx)
+	startMemory := v.indexRegister
+	for i := 0; i <= max; i++ {
+		v.Memory[startMemory] = v.registers[i]
+		startMemory++
+	}
+}
+
+func (v *VM) load(vx byte) {
+	startMemory := v.indexRegister
+	for i := 0; i <= int(vx); i++ {
+		v.registers[i] = v.Memory[startMemory]
+		startMemory++
+	}
+}
+
+func (v *VM) getDelayTimer(vx byte) {
+	// TODO: Test
+	// FX07 sets VX to value of the delay timer
+	v.registers[vx] = v.delayTimer.timer
+}
+
+func (v *VM) setDelayTimer(vx byte) {
+	// TODO: Test
+	// FX15 set the delay timer to value in VX
+	v.delayTimer.timer = v.registers[vx]
+}
+
+func (v *VM) setSoundTimer(vx byte) {
+	// TODO: Test
+	// FX18 sets sound timer to value in VX
+	println("vx = ", vx)
 }
 
 func (v *VM) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
@@ -244,20 +349,13 @@ func (v *VM) executeArthimeticInstrucions(opcode2 byte, vx byte, vy byte) {
 	}
 }
 
-func (v *VM) fetchNextInstruction() uint16 {
-	if v.previousInstructionJump == false {
-		return v.fetchAndIncrement()
-	}
-	return v.fetch()
-}
-
 func (v *VM) fetch() uint16 {
 	return bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
 }
 
 func (v *VM) fetchAndIncrement() uint16 {
 	i := bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
-	v.pc += 2
+	v.pc += uint16(v.pc_incrementer)
 	return i
 }
 

@@ -10,20 +10,21 @@ type Chip8TestSuite struct {
 	vm          *VM
 	mockDisplay mockDisplay
 	mockRandom  MockRandom
+	asm         *Assembler
 }
 
 const FontMemory = 0x50
-const SetRegister0 = 0x60
-const SetRegister2 = 0x62
-const SetRegister3 = 0x63
-const SetRegister4 = 0x64
-const AddRegister0 = 0x70
-const FontRegister0 = 0xF0
 
 func (suite *Chip8TestSuite) SetupTest() {
 	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, KeyboardEvent, 4}
 	suite.mockRandom = MockRandom{55}
 	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
+	suite.asm = NewAssembler()
+}
+
+func (suite *Chip8TestSuite) executeInstructions() {
+	suite.vm.Load(suite.asm.Assemble())
+	suite.vm.Run()
 }
 
 func (suite *Chip8TestSuite) TestFetchInstruction() {
@@ -42,87 +43,58 @@ func (suite *Chip8TestSuite) TestFetchNextInstruction() {
 	suite.Equal(uint16(0x3344), decoded, "First byte")
 }
 
-func (suite *Chip8TestSuite) TestSetRegisters() {
-	verifyRegisterSet(suite, []byte{SetRegister0, 0xFF}, 0, 0xFF)
-	verifyRegisterSet(suite, []byte{0x61, 0xEE}, 1, 0xEE)
-	verifyRegisterSet(suite, []byte{SetRegister2, 0xDD}, 2, 0xDD)
-	verifyRegisterSet(suite, []byte{SetRegister3, 0xCC}, 3, 0xCC)
-	verifyRegisterSet(suite, []byte{SetRegister4, 0xBB}, 4, 0xBB)
-}
+func (suite *Chip8TestSuite) TestFetchAndSetRegisters() {
+	suite.asm.SetRegister(0, 0x011)
+	suite.asm.SetRegister(1, 0x012)
+	suite.asm.SetRegister(5, 0x0CC)
 
-func verifyRegisterSet(suite *Chip8TestSuite, instruction []byte, register int, result int) {
-	suite.executeInstruction2(instruction)
-	suite.Equal(byte(result), suite.vm.registers[register])
-}
-
-func (suite *Chip8TestSuite) TestFetchAndSetAllRegisters() {
-	suite.vm.Load([]byte{SetRegister0, 0x11, 0x61, 0x12, 0x65, 0xCC})
-	suite.vm.Run()
+	suite.executeInstructions()
 
 	suite.Equal(byte(0x11), suite.vm.registers[0])
 	suite.Equal(byte(0x12), suite.vm.registers[1])
 	suite.Equal(byte(0xCC), suite.vm.registers[5])
 }
 
-func (suite *Chip8TestSuite) executeInstruction2(data []byte) {
-	m := mockDisplay{false, drawPatternValues{}, QuitEvent, 0}
-	r := MockRandom{55}
-	suite.vm = NewVM(&m, r)
-
-	suite.executeInstruction(data)
-}
-
-func (suite *Chip8TestSuite) executeInstruction(data []byte) {
-	suite.vm.Load(data)
-	suite.vm.Run()
-}
-
 func (suite *Chip8TestSuite) TestAddToRegister() {
-	asm := NewAssembler()
-	asm.AddToRegister(0, 0x0A)
+	suite.asm.AddToRegister(0, 0x0A)
 
-	suite.executeInstruction(asm.Assemble())
+	suite.executeInstructions()
 	suite.Equal(byte(0x0A), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestSetAndAddToRegister() {
-	asm := NewAssembler()
-	asm.SetRegister(0, 0x01)
-	asm.AddToRegister(0, 0x0A)
+	suite.asm.SetRegister(0, 0x01)
+	suite.asm.AddToRegister(0, 0x0A)
 
-	suite.executeInstruction(asm.Assemble())
+	suite.executeInstructions()
 	suite.Equal(byte(0x0B), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestSetIndexRegister() {
-	asm := NewAssembler()
-	asm.SetIndexRegister(0x0A)
+	suite.asm.SetIndexRegister(0x0A)
 
-	suite.executeInstruction(asm.Assemble())
+	suite.executeInstructions()
 	suite.Equal(uint16(0x0A), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestSetIndexRegisterWith12BitValue() {
-	asm := NewAssembler()
-	asm.SetIndexRegister(0xFFF)
+	suite.asm.SetIndexRegister(0xFFF)
 
-	suite.executeInstruction(asm.Assemble())
+	suite.executeInstructions()
 	suite.Equal(uint16(0xFFF), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestSetJumpToAddress() {
-	asm := NewAssembler()
-	asm.Jump(0x300)
+	suite.asm.Jump(0x300)
 
-	suite.executeInstruction(asm.Assemble())
+	suite.executeInstructions()
 	suite.Equal(uint16(0x300), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestClearScreen() {
-	asm := NewAssembler()
-	asm.ClearScreen()
+	suite.asm.ClearScreen()
 
-	suite.vm.Load(asm.Assemble())
+	suite.vm.Load(suite.asm.Assemble())
 	suite.vm.Run()
 
 	suite.True(suite.mockDisplay.screenCleared)
@@ -131,7 +103,9 @@ func (suite *Chip8TestSuite) TestClearScreen() {
 func (suite *Chip8TestSuite) TestGetCoordinatesFromRegisters_whenDraw() {
 	suite.vm.registers[5] = 20
 	suite.vm.registers[10] = 30
-	suite.vm.Load([]byte{0xD5, 0xA0})
+
+	suite.asm.Display(5, 0xA, 0)
+	suite.vm.Load(suite.asm.Assemble())
 
 	suite.vm.Run()
 
@@ -143,7 +117,10 @@ func (suite *Chip8TestSuite) TestCoordinatesShouldWrap() {
 	suite.vm.registers[5] = 64
 	suite.vm.registers[10] = 32
 	suite.vm.indexRegister = 0x200
-	suite.vm.Load([]byte{0xD5, 0xA5})
+
+	suite.asm.Display(5, 0xA, 5)
+
+	suite.vm.Load(suite.asm.Assemble())
 
 	suite.vm.Run()
 
@@ -167,15 +144,12 @@ func (suite *Chip8TestSuite) TestLoadPlacesCodeAtCorrectPlace() {
 }
 
 func (suite *Chip8TestSuite) TestDraw() {
-	instructions1 := setRegisterOpcode(0x5, 0x14)
-	instructions2 := setRegisterOpcode(0xA, 0x1E)
-	indexInstruction := setIndexRegisterOpcode(0x050)
-	drawInstruction := drawOpcode(0x5, 0xA, 5)
+	suite.asm.SetRegister(0x5, 0x14)
+	suite.asm.SetRegister(0xA, 0x1E)
+	suite.asm.SetIndexRegister(0x50)
+	suite.asm.Display(0x5, 0xA, 5)
 
-	result := append(instructions1, instructions2...)
-	result = append(result, indexInstruction...)
-	result = append(result, drawInstruction...)
-	suite.vm.Load(result)
+	suite.vm.Load(suite.asm.Assemble())
 
 	suite.vm.Run()
 
@@ -186,61 +160,61 @@ func (suite *Chip8TestSuite) TestDraw() {
 }
 
 func (suite *Chip8TestSuite) TestVXIsSetToVY() {
-	suite.executeInstruction([]byte{
-		0x65, 0x14, // Set register 5 to 0x14 (20)
-		0x80, 0x50, // Set register 0 to what's in register 5
-	})
+	suite.asm.SetRegister(0x5, 0x14)
+	suite.asm.Set(0x0, 0x5)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0x14), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestVXIsSetToBinaryORofVXVY() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x0F, // Set register 0 to 0x0F
-		0x61, 0xF0, // Set register 1 to 0xF0
-		0x80, 0x11, // Set register 0 to what's in register 0 & 1 ORd together
-	})
+	suite.asm.SetRegister(0x0, 0x0F)
+	suite.asm.SetRegister(0x1, 0xF0)
+	suite.asm.Or(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0xFF), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestVXIsSetToBinaryANDofVXVY() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0b00001111, // Set register 0 to ...
-		0x61, 0b00110011, // Set register 1 to ...
-		0x80, 0x12, // Set register 0 to what's in register 0 & 1 ANDd together
-	})
+	suite.asm.SetRegister(0x0, 0b00001111)
+	suite.asm.SetRegister(0x1, 0b00110011)
+	suite.asm.And(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0b00000011), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestVXIsSetToBinaryXORofVXVY() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0b00001111, // Set register 0 to ...
-		0x61, 0b00110011, // Set register 1 to ...
-		0x80, 0x13, // Set register 0 to what's in register 0 & 1 ANDd together
-	})
+	suite.asm.SetRegister(0x0, 0b00001111)
+	suite.asm.SetRegister(0x1, 0b00110011)
+	suite.asm.Xor(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0b00111100), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestAddWithNoCarry() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x0A, // Set register 0 to ...
-		0x61, 0x0A, // Set register 1 to ...
-		0x80, 0x14, // Set register 0 to what's in register 0 + 1
-	})
+	suite.asm.SetRegister(0x0, 0x0A)
+	suite.asm.SetRegister(0x1, 0x0A)
+	suite.asm.Add(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0x14), suite.vm.registers[0])
 	suite.Equal(byte(0), suite.vm.registers[15])
 }
 
 func (suite *Chip8TestSuite) TestAddWithCarry() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0xFF, // Set register 0 to ...
-		0x61, 0x01, // Set register 1 to ...
-		0x80, 0x14, // Set register 0 to what's in register 0 + 1
-	})
+	suite.asm.SetRegister(0x0, 0xFF)
+	suite.asm.SetRegister(0x1, 0x01)
+	suite.asm.Add(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0x00), suite.vm.registers[0])
 	suite.Equal(byte(1), suite.vm.registers[15])
@@ -249,11 +223,12 @@ func (suite *Chip8TestSuite) TestAddWithCarry() {
 func (suite *Chip8TestSuite) TestCarryFlagIsSetTo0AfterPreviousCarry() {
 	suite.vm.registers[15] = 1
 
-	suite.vm.Load([]byte{
-		SetRegister0, 0x0A, // Set register 0 to ...
-		0x61, 0x0A, // Set register 1 to ...
-		0x80, 0x14, // Set register 0 to what's in register 0 + 1
-	})
+	suite.asm.SetRegister(0x0, 0x0A)
+	suite.asm.SetRegister(0x1, 0x0A)
+	suite.asm.Add(0x0, 0x1)
+
+	suite.executeInstructions()
+
 	suite.vm.Run()
 
 	suite.Equal(byte(0x14), suite.vm.registers[0])
@@ -261,44 +236,44 @@ func (suite *Chip8TestSuite) TestCarryFlagIsSetTo0AfterPreviousCarry() {
 }
 
 func (suite *Chip8TestSuite) TestVXSubtractVY() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x0A, // Set register 0 to 10
-		0x61, 0x01, // Set register 1 to 1
-		0x80, 0x15, // Set VX to 10 - 1
-	})
+	suite.asm.SetRegister(0x0, 0x0A)
+	suite.asm.SetRegister(0x1, 0x01)
+	suite.asm.Subtract(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0x09), suite.vm.registers[0])
 	suite.Equal(byte(1), suite.vm.registers[15])
 }
 
 func (suite *Chip8TestSuite) TestVXSubtractVYUnderflow() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x0A, // Set register 0 to 10
-		0x61, 0x0B, // Set register 1 to 1
-		0x80, 0x15, // Set VX to 10 - 11
-	})
+	suite.asm.SetRegister(0x0, 0x0A)
+	suite.asm.SetRegister(0x1, 0x0B)
+	suite.asm.Subtract(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0xFF), suite.vm.registers[0])
 	suite.Equal(byte(0), suite.vm.registers[15])
 }
 
 func (suite *Chip8TestSuite) TestVYSubtractVX() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x01, // Set register 0 to 1
-		0x61, 0x0A, // Set register 1 to 10
-		0x80, 0x17, // Set VX to 10 - 1
-	})
+	suite.asm.SetRegister(0x0, 0x01)
+	suite.asm.SetRegister(0x1, 0x0A)
+	suite.asm.SubtractLast(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0x09), suite.vm.registers[0])
 	suite.Equal(byte(1), suite.vm.registers[15])
 }
 
 func (suite *Chip8TestSuite) TestVYSubtractVXUnderflow() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x0B, // Set register 0 to 11
-		0x61, 0x0A, // Set register 1 to 10
-		0x80, 0x17, // Set VX to 10 - 1
-	})
+	suite.asm.SetRegister(0x0, 0x0B)
+	suite.asm.SetRegister(0x1, 0x0A)
+	suite.asm.SubtractLast(0x0, 0x1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0xFF), suite.vm.registers[0])
 	suite.Equal(byte(0), suite.vm.registers[15])
@@ -306,10 +281,10 @@ func (suite *Chip8TestSuite) TestVYSubtractVXUnderflow() {
 
 // 8XY6
 func (suite *Chip8TestSuite) TestVXShiftRight() {
-	suite.executeInstruction([]byte{
-		0x61, 0b11111110, // Set register 1 to 10
-		0x80, 0x16, // Set VX to VY and shift right
-	})
+	suite.asm.SetRegister(1, 0b11111110)
+	suite.asm.ShiftRight(0, 1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0b11111110), suite.vm.registers[1])
 	suite.Equal(byte(0b01111111), suite.vm.registers[0])
@@ -318,10 +293,10 @@ func (suite *Chip8TestSuite) TestVXShiftRight() {
 
 // 8XY6
 func (suite *Chip8TestSuite) TestVXShiftRightWithOverflow() {
-	suite.executeInstruction([]byte{
-		0x61, 0b00110001, // Set register 1 to 10
-		0x80, 0x16, // Set VX to VY and shift right
-	})
+	suite.asm.SetRegister(1, 0b00110001)
+	suite.asm.ShiftRight(0, 1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0b00110001), suite.vm.registers[1])
 	suite.Equal(byte(0b00011000), suite.vm.registers[0])
@@ -329,10 +304,10 @@ func (suite *Chip8TestSuite) TestVXShiftRightWithOverflow() {
 }
 
 func (suite *Chip8TestSuite) TestVXShiftLeft() {
-	suite.executeInstruction([]byte{
-		0x61, 0b01111110, // Set register 1 to 10
-		0x80, 0x1E, // Set VX to VY and shift right
-	})
+	suite.asm.SetRegister(1, 0b01111110)
+	suite.asm.ShiftLeft(0, 1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0b01111110), suite.vm.registers[1])
 	suite.Equal(byte(0b11111100), suite.vm.registers[0])
@@ -340,10 +315,10 @@ func (suite *Chip8TestSuite) TestVXShiftLeft() {
 }
 
 func (suite *Chip8TestSuite) TestVXShiftLeftWithOverflow() {
-	suite.executeInstruction([]byte{
-		0x61, 0b11111100, // Set register 1 to 10
-		0x80, 0x1E, // Set VX to VY and shift right
-	})
+	suite.asm.SetRegister(1, 0b11111100)
+	suite.asm.ShiftLeft(0, 1)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(0b11111100), suite.vm.registers[1])
 	suite.Equal(byte(0b11111000), suite.vm.registers[0])
@@ -351,47 +326,39 @@ func (suite *Chip8TestSuite) TestVXShiftLeftWithOverflow() {
 }
 
 func (suite *Chip8TestSuite) TestIndexPointsToCharacter0() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x00, // Set register 0 to 0
-		FontRegister0, 0x29, // Set Index to point to character 0
-	})
+	suite.asm.SetRegister(0, 0x0)
+	suite.asm.FontChar(0)
+
+	suite.executeInstructions()
 
 	suite.Equal(uint16(FontMemory), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestIndexPointsToCharacter1() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x01, // Set register 0 to 1
-		FontRegister0, 0x29, // Set Index to point to character 1
-	})
+	suite.asm.SetRegister(0, 0x1)
+	suite.asm.FontChar(0)
+
+	suite.executeInstructions()
 
 	suite.Equal(uint16(FontMemory+5), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestIndexPointsToCharacter2() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x02, // Set register 0 to 2
-		FontRegister0, 0x29, // Set Index to point to character 2
-	})
+	suite.asm.SetRegister(0, 0x2)
+	suite.asm.FontChar(0)
+
+	suite.executeInstructions()
 
 	suite.Equal(uint16(FontMemory+10), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestIndexPointsToCharacterF() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x0F, // Set register 0 to F
-		FontRegister0, 0x29, // Set Index to point to character F
-	})
+	suite.asm.SetRegister(0, 0xF)
+	suite.asm.FontChar(0)
+
+	suite.executeInstructions()
 
 	suite.Equal(uint16(FontMemory+(0x0F*5)), suite.vm.indexRegister)
-}
-
-type MockRandom struct {
-	fakeRandom byte
-}
-
-func (mockRandom MockRandom) Generate() byte {
-	return mockRandom.fakeRandom
 }
 
 func (suite *Chip8TestSuite) TestRandomNumber() {
@@ -415,11 +382,11 @@ func (suite *Chip8TestSuite) verifyRandomIsStoredInRegister(instruction byte, bi
 }
 
 func (suite *Chip8TestSuite) TestDecimalConversion() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x7B, // Set register 0 to 123
-		0xA4, 0x00, // Set index register to point to address 0x400 (1024)
-		0xF0, 0x33, // Convert number in register 0 and store in index register
-	})
+	suite.asm.SetRegister(0, 0x7B)
+	suite.asm.SetIndexRegister(0x400)
+	suite.asm.BCD(0)
+
+	suite.executeInstructions()
 
 	suite.Equal(byte(1), suite.vm.Memory[1024])
 	suite.Equal(byte(2), suite.vm.Memory[1025])
@@ -428,83 +395,99 @@ func (suite *Chip8TestSuite) TestDecimalConversion() {
 
 func (suite *Chip8TestSuite) TestDoesSkipIfEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		0x30, 0x00})
+
+	suite.asm.SkipIfEqual(0, 0x00)
+	suite.executeInstructions()
 	suite.Equal(uint16(0x206), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestDoesSkipIfEqualToRegister() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x11,
-		0x30, 0x11})
+
+	suite.asm.SetRegister(0, 0x11)
+	suite.asm.SkipIfEqual(0, 0x11)
+	suite.executeInstructions()
+
 	suite.Equal(uint16(0x208), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestDoesNotSkipIfNotEqualToRegister() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x11,
-		0x30, 0x22})
+
+	suite.asm.SetRegister(0, 0x11)
+	suite.asm.SkipIfEqual(0, 0x22)
+	suite.executeInstructions()
+
 	suite.Equal(uint16(0x206), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestDoesSkipIfNotEqualToRegister() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x11,
-		0x40, 0x22})
+
+	suite.asm.SetRegister(0, 0x11)
+	suite.asm.SkipIfNotEqual(0, 0x22)
+	suite.executeInstructions()
+
 	suite.Equal(uint16(0x208), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestDoesNotSkipIfEqualToRegister() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x33,
-		0x40, 0x33})
+
+	suite.asm.SetRegister(0, 0x33)
+	suite.asm.SkipIfNotEqual(0, 0x33)
+	suite.executeInstructions()
+
 	suite.Equal(uint16(0x206), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestSkipsWhenVxAndVyAreEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x15,
-		0x61, 0x15,
-		0x50, 0x10})
+
+	suite.asm.SetRegister(0, 0x15)
+	suite.asm.SetRegister(1, 0x15)
+	suite.asm.SkipIfRegistersEqual(0, 1)
+	suite.executeInstructions()
+
 	suite.Equal(uint16(0x20A), suite.vm.pc)
 }
 func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreNotEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x15,
-		0x61, 0x20,
-		0x50, 0x10})
+
+	suite.asm.SetRegister(0, 0x15)
+	suite.asm.SetRegister(1, 0x20)
+	suite.asm.SkipIfRegistersEqual(0, 1)
+	suite.executeInstructions()
+
 	suite.Equal(uint16(0x208), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestSkipsWhenVxAndVyAreNotEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x15,
-		0x61, 0x25,
-		0x90, 0x10})
+
+	suite.asm.SetRegister(0, 0x15)
+	suite.asm.SetRegister(1, 0x20)
+	suite.asm.SkipIfRegistersNotEqual(0, 1)
+	suite.executeInstructions()
+
 	suite.Equal(uint16(0x20A), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x25,
-		0x61, 0x25,
-		0x90, 0x10})
+
+	suite.asm.SetRegister(0, 0x25)
+	suite.asm.SetRegister(1, 0x25)
+	suite.asm.SkipIfRegistersNotEqual(0, 1)
+	suite.executeInstructions()
+
 	suite.Equal(uint16(0x208), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestJumpToSubroutineUpdatesProgramCounterAndPushesToStack() {
-	asm := NewAssembler()
-	asm.Sub(0x345)
+	suite.asm.Sub(0x345)
 
-	suite.executeInstruction(asm.Assemble())
+	suite.executeInstructions()
 	suite.Equal(uint16(0x345), suite.vm.pc)
 	value, _ := suite.vm.theStack.Pop()
 	suite.Equal(uint16(0x345), value)
@@ -513,10 +496,9 @@ func (suite *Chip8TestSuite) TestJumpToSubroutineUpdatesProgramCounterAndPushesT
 func (suite *Chip8TestSuite) TestReturnFromSubroutine() {
 	suite.vm.theStack.Push(0xA12)
 
-	asm := NewAssembler()
-	asm.Return()
+	suite.asm.Return()
 
-	suite.vm.Load(asm.Assemble())
+	suite.vm.Load(suite.asm.Assemble())
 	suite.vm.Run()
 	suite.Equal(uint16(0xA12), suite.vm.pc)
 }
@@ -527,60 +509,61 @@ func (suite *Chip8TestSuite) TestGetKey() {
 	suite.mockDisplay.SetKey(55)
 	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
 
-	suite.vm.Load([]byte{0xF3, 0x0A})
+	suite.asm.GetKey(3)
+	suite.vm.Load(suite.asm.Assemble())
 	suite.vm.Run()
 	suite.Equal(byte(55), suite.vm.registers[3])
 }
 
 func (suite *Chip8TestSuite) TestRegister0AddToIndex() {
-	suite.executeInstruction([]byte{
-		SetRegister0, 0x25,
-		0xF0, 0x1E, // Add value in VX to index register
-	})
+	suite.asm.SetRegister(0, 0x25)
+	suite.asm.AddToIndex(0)
+
+	suite.executeInstructions()
 
 	suite.Equal(uint16(0x25), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestRegister1AddToIndex() {
-	suite.executeInstruction([]byte{
-		0x61, 0x55,
-		0xF1, 0x1E, // Add value in VX to index register
-	})
+	suite.asm.SetRegister(1, 0x55)
+	suite.asm.AddToIndex(1)
+
+	suite.executeInstructions()
 
 	suite.Equal(uint16(0x55), suite.vm.indexRegister)
 }
 
 func (suite *Chip8TestSuite) TestStoreSingleRegisterToMemory() {
-	suite.executeInstruction([]byte{
-		0xA2, 0x00, // Set Index register to 200
-		SetRegister0, 0x69,
-		0xF0, 0x55,
-	})
+	suite.asm.SetIndexRegister(0x200)
+	suite.asm.SetRegister(0, 0x69)
+	suite.asm.Store(0)
+	suite.executeInstructions()
 	suite.Equal(uint8(0x69), suite.vm.Memory[0x200])
 	suite.Equal(uint8(0x00), suite.vm.Memory[0x201])
 }
 
 func (suite *Chip8TestSuite) TestStoreTwoRegistersToMemory() {
-	suite.executeInstruction([]byte{
-		0xA2, 0x00, // Set Index register to 200
-		SetRegister0, 0x69,
-		0x61, 0x58,
-		0x62, 0x47,
-		0x63, 0x47,
-		0x64, 0x36,
-		0x65, 0x44,
-		0x66, 0x33,
-		0x67, 0x22,
-		0x68, 0x11,
-		0x69, 0x00,
-		0x6A, 0xAA,
-		0x6B, 0xBB,
-		0x6C, 0xCC,
-		0x6D, 0xDD,
-		0x6E, 0xEE,
-		0x6F, 0xFF,
-		0xFF, 0x55, // Store registers up to F
-	})
+	suite.asm.SetIndexRegister(0x200)
+	suite.asm.SetRegister(0, 0x69)
+	suite.asm.SetRegister(1, 0x58)
+	suite.asm.SetRegister(2, 0x47)
+	suite.asm.SetRegister(3, 0x47)
+	suite.asm.SetRegister(4, 0x36)
+	suite.asm.SetRegister(5, 0x44)
+	suite.asm.SetRegister(6, 0x33)
+	suite.asm.SetRegister(7, 0x22)
+	suite.asm.SetRegister(8, 0x11)
+	suite.asm.SetRegister(9, 0x00)
+	suite.asm.SetRegister(10, 0xAA)
+	suite.asm.SetRegister(11, 0xBB)
+	suite.asm.SetRegister(12, 0xCC)
+	suite.asm.SetRegister(13, 0xDD)
+	suite.asm.SetRegister(14, 0xEE)
+	suite.asm.SetRegister(15, 0xFF)
+	suite.asm.Store(0xF)
+
+	suite.executeInstructions()
+
 	suite.Equal(uint8(0x69), suite.vm.Memory[0x200])
 	suite.Equal(uint8(0x58), suite.vm.Memory[0x201])
 	suite.Equal(uint8(0x47), suite.vm.Memory[0x202])
@@ -600,24 +583,21 @@ func (suite *Chip8TestSuite) TestStoreTwoRegistersToMemory() {
 }
 
 func (suite *Chip8TestSuite) TestLoadSingleRegisterFromMemory() {
-	data := []byte{
-		0xA3, 0x00, // Set Index register to 200
-		0xF0, 0x65, // Load from memory
-	}
+	suite.asm.SetIndexRegister(0x300)
+	suite.asm.Load(0)
 
-	suite.vm.Load(data)
+	suite.vm.Load(suite.asm.Assemble())
 	suite.vm.Memory[0x300] = 0x88
 	suite.vm.Run()
 	suite.Equal(uint8(0x88), suite.vm.registers[0])
 }
 
 func (suite *Chip8TestSuite) TestLoadMultipleRegistersFromMemory() {
-	data := []byte{
-		0xA3, 0x00, // Set Index register to 300
-		0xFF, 0x65, // Load from memory
-	}
+	suite.asm.SetIndexRegister(0x300)
+	suite.asm.Load(0xF)
 
-	suite.vm.Load(data)
+	suite.vm.Load(suite.asm.Assemble())
+
 	suite.vm.Memory[0x300] = 0x88
 	suite.vm.Memory[0x301] = 0x99
 	suite.vm.Memory[0x302] = 0x77
@@ -631,9 +611,24 @@ func (suite *Chip8TestSuite) TestLoadMultipleRegistersFromMemory() {
 }
 
 func (suite *Chip8TestSuite) TestJumpWithoutOffset() {
-	suite.executeInstruction([]byte{0xB3, 0x45})
+	suite.asm.Jump(0x345)
+	suite.executeInstructions()
 	suite.Equal(uint16(0x345), suite.vm.pc)
 }
+
+/*
+	TODO:
+
+Jump test
+Jump to location
+*/
+//func (suite *Chip8TestSuite) TestProgramCounterShouldChange() {
+//	// Programs loaded into 0x200
+//	suite.asm.SetRegister(0, 0x10)
+//	//suite.asm.Jump(0x345)
+//	suite.executeInstructions()
+//	suite.Equal(uint16(0x202), suite.vm.pc)
+//}
 
 func (suite *Chip8TestSuite) TestJumpWithOffset() {
 	data := []byte{0xB3, 0x45}

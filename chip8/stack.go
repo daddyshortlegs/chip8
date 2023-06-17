@@ -1,6 +1,9 @@
 package chip8
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type stack struct {
 	address [16]uint16
@@ -16,6 +19,8 @@ func (s *stack) Push(value uint16) error {
 		return errors.New("stack overflow")
 	}
 	s.address[s.index] = value
+	fmt.Printf("stack push %X\n", value)
+
 	s.index++
 	return nil
 }
@@ -26,5 +31,7 @@ func (s *stack) Pop() (uint16, error) {
 		return 0, errors.New("stack empty")
 	}
 	value := s.address[s.index]
+	fmt.Printf("stack pop %X\n", value)
+
 	return value, nil
 }
