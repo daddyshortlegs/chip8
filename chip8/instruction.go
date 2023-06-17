@@ -1,7 +1,11 @@
 package chip8
 
 type instruction struct {
-	instr uint16
+	instr   uint16
+	opCode  byte
+	vx      byte
+	vy      byte
+	opCode2 byte
 }
 
 func NewInstruction(instr uint16) *instruction {
@@ -10,11 +14,10 @@ func NewInstruction(instr uint16) *instruction {
 	return i
 }
 
-func (i *instruction) extractNibbles(instr uint16) (byte, byte, byte, byte) {
-	opCode := extractNibble(instr)
-	vx := getRightNibble(extractFirstByte(instr))
+func (i *instruction) extractNibbles(instr uint16) {
+	i.opCode = extractNibble(instr)
+	i.vx = getRightNibble(extractFirstByte(instr))
 	secondByte := extractSecondByte(instr)
-	vy := getLeftNibble(secondByte)
-	opcode2 := getRightNibble(secondByte)
-	return opCode, vx, vy, opcode2
+	i.vy = getLeftNibble(secondByte)
+	i.opCode2 = getRightNibble(secondByte)
 }

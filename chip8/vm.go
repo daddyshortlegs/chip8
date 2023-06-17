@@ -109,17 +109,14 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	} else if instr == Return {
 		v.opReturn(instr)
 	} else {
-		i := instruction{instr}
-		opCode, _, _, _ := i.extractNibbles(instr)
-
-		mOps[opCode](instr)
+		i := NewInstruction(instr)
+		mOps[i.opCode](instr)
 	}
 	return false
 }
 
 func (v *VM) furtherOperations(instr uint16) {
-	i := instruction{instr}
-	_, vx, _, _ := i.extractNibbles(instr)
+	i := NewInstruction(instr)
 
 	const Bcd = 0x33
 	const FontChar = 0x29
@@ -143,17 +140,16 @@ func (v *VM) furtherOperations(instr uint16) {
 		SetSoundTimer: v.setSoundTimer,
 	}
 
-	m[extractSecondByte(instr)](vx)
+	m[extractSecondByte(instr)](i.vx)
 }
 
 func (v *VM) opDisplay(instr uint16) {
-	i := instruction{instr}
-	_, vx, vy, opcode2 := i.extractNibbles(instr)
+	i := NewInstruction(instr)
 
-	heightInPixels := opcode2
+	heightInPixels := i.opCode2
 
-	v.xCoord = v.registers[vx] & 63
-	v.yCoord = v.registers[vy] & 31
+	v.xCoord = v.registers[i.vx] & 63
+	v.yCoord = v.registers[i.vy] & 31
 	v.registers[15] = 0
 
 	//fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, heightInPixels)
@@ -161,12 +157,10 @@ func (v *VM) opDisplay(instr uint16) {
 }
 
 func (v *VM) opRandom(instr uint16) {
-	i := instruction{instr}
-	_, vx, _, _ := i.extractNibbles(instr)
-
+	i := NewInstruction(instr)
 	randomNumber := v.random.Generate()
 	secondByte := extractSecondByte(instr)
-	v.registers[vx] = randomNumber & secondByte
+	v.registers[i.vx] = randomNumber & secondByte
 }
 
 func (v *VM) jumpWithOffset(instr uint16) {
@@ -180,37 +174,33 @@ func (v *VM) setIndexRegister(instr uint16) {
 }
 
 func (v *VM) skipIfRegistersNotEqual(instr uint16) {
-	i := instruction{instr}
-	_, vx, vy, _ := i.extractNibbles(instr)
+	i := NewInstruction(instr)
 
-	if v.registers[vx] != v.registers[vy] {
+	if v.registers[i.vx] != v.registers[i.vy] {
 		v.pc += 2
 	}
 }
 
 func (v *VM) skipIfRegistersEqual(instr uint16) {
-	i := instruction{instr}
-	_, vx, vy, _ := i.extractNibbles(instr)
+	i := NewInstruction(instr)
 
-	if v.registers[vx] == v.registers[vy] {
+	if v.registers[i.vx] == v.registers[i.vy] {
 		v.pc += 2
 	}
 }
 
 func (v *VM) skipIfNotEqual(instr uint16) {
-	i := instruction{instr}
-	_, vx, _, _ := i.extractNibbles(instr)
+	i := NewInstruction(instr)
 
-	if v.registers[vx] != extractSecondByte(instr) {
+	if v.registers[i.vx] != extractSecondByte(instr) {
 		v.pc += 2
 	}
 }
 
 func (v *VM) skipIfEqual(instr uint16) {
-	i := instruction{instr}
-	_, vx, _, _ := i.extractNibbles(instr)
+	i := NewInstruction(instr)
 
-	if v.registers[vx] == extractSecondByte(instr) {
+	if v.registers[i.vx] == extractSecondByte(instr) {
 		v.pc += 2
 	}
 }
@@ -305,9 +295,7 @@ func (v *VM) setSoundTimer(vx byte) {
 }
 
 func (v *VM) executeArithmeticInstructions(instr uint16) {
-
-	i := instruction{instr}
-	_, vx, vy, opcode2 := i.extractNibbles(instr)
+	i := NewInstruction(instr)
 
 	const setVxToVy = 0x0
 	const binaryOr = 0x1
@@ -319,42 +307,42 @@ func (v *VM) executeArithmeticInstructions(instr uint16) {
 	const subtractFromVy = 0x7
 	const shiftLeft = 0xE
 
-	if opcode2 == setVxToVy {
-		v.registers[vx] = v.registers[vy]
-	} else if opcode2 == binaryOr {
-		v.registers[vx] = v.registers[vx] | v.registers[vy]
-	} else if opcode2 == binaryAnd {
-		v.registers[vx] = v.registers[vx] & v.registers[vy]
-	} else if opcode2 == logicalXor {
-		v.registers[vx] = v.registers[vx] ^ v.registers[vy]
-	} else if opcode2 == addToVx {
-		vxRegister := v.registers[vx]
-		vyRegister := v.registers[vy]
+	if i.opCode2 == setVxToVy {
+		v.registers[i.vx] = v.registers[i.vy]
+	} else if i.opCode2 == binaryOr {
+		v.registers[i.vx] = v.registers[i.vx] | v.registers[i.vy]
+	} else if i.opCode2 == binaryAnd {
+		v.registers[i.vx] = v.registers[i.vx] & v.registers[i.vy]
+	} else if i.opCode2 == logicalXor {
+		v.registers[i.vx] = v.registers[i.vx] ^ v.registers[i.vy]
+	} else if i.opCode2 == addToVx {
+		vxRegister := v.registers[i.vx]
+		vyRegister := v.registers[i.vy]
 
-		v.registers[vx] = vxRegister + vyRegister
+		v.registers[i.vx] = vxRegister + vyRegister
 		var sum = uint16(vxRegister) + uint16(vyRegister)
 		if sum > 255 {
 			v.registers[15] = 1
 		} else {
 			v.registers[15] = 0
 		}
-	} else if opcode2 == subtractFromVx {
-		vxRegister := v.registers[vx]
-		vyRegister := v.registers[vy]
-		v.registers[vx] = vxRegister - vyRegister
+	} else if i.opCode2 == subtractFromVx {
+		vxRegister := v.registers[i.vx]
+		vyRegister := v.registers[i.vy]
+		v.registers[i.vx] = vxRegister - vyRegister
 		var underflowFlag byte = 1
 		if vxRegister < vyRegister {
 			underflowFlag = 0
 		}
 		v.registers[15] = underflowFlag
-	} else if opcode2 == shiftRight {
-		overflow := v.registers[vy] & 0b00000001
+	} else if i.opCode2 == shiftRight {
+		overflow := v.registers[i.vy] & 0b00000001
 		v.registers[15] = overflow
-		v.registers[vx] = v.registers[vy] >> 1
-	} else if opcode2 == subtractFromVy {
-		vxRegister := v.registers[vx]
-		vyRegister := v.registers[vy]
-		v.registers[vx] = vyRegister - vxRegister
+		v.registers[i.vx] = v.registers[i.vy] >> 1
+	} else if i.opCode2 == subtractFromVy {
+		vxRegister := v.registers[i.vx]
+		vyRegister := v.registers[i.vy]
+		v.registers[i.vx] = vyRegister - vxRegister
 
 		var underflowFlag byte = 1
 		if vyRegister < vxRegister {
@@ -362,10 +350,10 @@ func (v *VM) executeArithmeticInstructions(instr uint16) {
 		}
 		v.registers[15] = underflowFlag
 
-	} else if opcode2 == shiftLeft {
-		overflow := v.registers[vy] & 0b10000000
+	} else if i.opCode2 == shiftLeft {
+		overflow := v.registers[i.vy] & 0b10000000
 		v.registers[15] = overflow >> 7
-		v.registers[vx] = v.registers[vy] << 1
+		v.registers[i.vx] = v.registers[i.vy] << 1
 	}
 }
 
