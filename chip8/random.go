@@ -1,6 +1,9 @@
 package chip8
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 type Random interface {
 	Generate() byte
@@ -8,6 +11,12 @@ type Random interface {
 
 type PseudoRandom struct {
 	Seed int64
+}
+
+func NewRandom() *PseudoRandom {
+	r := new(PseudoRandom)
+	r.Seed = time.Now().UnixNano()
+	return r
 }
 
 func (pseudoRandom PseudoRandom) Generate() byte {

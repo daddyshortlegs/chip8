@@ -2,7 +2,7 @@ package main
 
 import (
 	"chip8"
-	"time"
+	"io/ioutil"
 )
 
 func main() {
@@ -10,18 +10,16 @@ func main() {
 	defer chip8Display.shutdown()
 	chip8Display.startUp()
 
-	nano := time.Now().UnixNano()
-	random := chip8.PseudoRandom{Seed: nano}
+	random := chip8.NewRandom()
 
 	vm := chip8.NewVM(&chip8Display, random)
 
-	//dat, _ := ioutil.ReadFile("IBM-Logo.ch8")
+	dat, _ := ioutil.ReadFile("test_opcode.ch8")
 	//check(err)
 
-	//vm.Load(dat)
-	//vm.Load([]byte{0xF3, 0x0A})
+	vm.Load(dat)
 
-	vm.Load(andysProgram())
+	//vm.Load(andysProgram())
 	vm.Run()
 
 	//Chip8Display.ClearScreen()
