@@ -93,7 +93,7 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 		JumpWithOffset:          v.jumpWithOffset,
 		Random:                  v.opRandom,
 		Display:                 v.opDisplay,
-		BitwiseOperations:       v.executeArthimeticInstrucions,
+		BitwiseOperations:       v.executeArithmeticInstructions,
 		FurtherOperations:       v.furtherOperations,
 	}
 
@@ -110,7 +110,7 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 		v.opReturn(instr)
 	} else {
 		i := instruction{instr}
-		opCode, _, _, _ := i.extractNibbles()
+		opCode, _, _, _ := i.extractNibbles(instr)
 
 		mOps[opCode](instr)
 	}
@@ -119,7 +119,7 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 
 func (v *VM) furtherOperations(instr uint16) {
 	i := instruction{instr}
-	_, vx, _, _ := i.extractNibbles()
+	_, vx, _, _ := i.extractNibbles(instr)
 
 	const Bcd = 0x33
 	const FontChar = 0x29
@@ -148,7 +148,7 @@ func (v *VM) furtherOperations(instr uint16) {
 
 func (v *VM) opDisplay(instr uint16) {
 	i := instruction{instr}
-	_, vx, vy, opcode2 := i.extractNibbles()
+	_, vx, vy, opcode2 := i.extractNibbles(instr)
 
 	heightInPixels := opcode2
 
@@ -162,7 +162,7 @@ func (v *VM) opDisplay(instr uint16) {
 
 func (v *VM) opRandom(instr uint16) {
 	i := instruction{instr}
-	_, vx, _, _ := i.extractNibbles()
+	_, vx, _, _ := i.extractNibbles(instr)
 
 	randomNumber := v.random.Generate()
 	secondByte := extractSecondByte(instr)
@@ -181,7 +181,7 @@ func (v *VM) setIndexRegister(instr uint16) {
 
 func (v *VM) skipIfRegistersNotEqual(instr uint16) {
 	i := instruction{instr}
-	_, vx, vy, _ := i.extractNibbles()
+	_, vx, vy, _ := i.extractNibbles(instr)
 
 	if v.registers[vx] != v.registers[vy] {
 		v.pc += 2
@@ -190,7 +190,7 @@ func (v *VM) skipIfRegistersNotEqual(instr uint16) {
 
 func (v *VM) skipIfRegistersEqual(instr uint16) {
 	i := instruction{instr}
-	_, vx, vy, _ := i.extractNibbles()
+	_, vx, vy, _ := i.extractNibbles(instr)
 
 	if v.registers[vx] == v.registers[vy] {
 		v.pc += 2
@@ -199,7 +199,7 @@ func (v *VM) skipIfRegistersEqual(instr uint16) {
 
 func (v *VM) skipIfNotEqual(instr uint16) {
 	i := instruction{instr}
-	_, vx, _, _ := i.extractNibbles()
+	_, vx, _, _ := i.extractNibbles(instr)
 
 	if v.registers[vx] != extractSecondByte(instr) {
 		v.pc += 2
@@ -208,7 +208,7 @@ func (v *VM) skipIfNotEqual(instr uint16) {
 
 func (v *VM) skipIfEqual(instr uint16) {
 	i := instruction{instr}
-	_, vx, _, _ := i.extractNibbles()
+	_, vx, _, _ := i.extractNibbles(instr)
 
 	if v.registers[vx] == extractSecondByte(instr) {
 		v.pc += 2
@@ -304,10 +304,10 @@ func (v *VM) setSoundTimer(vx byte) {
 	println("vx = ", vx)
 }
 
-func (v *VM) executeArthimeticInstrucions(instr uint16) {
+func (v *VM) executeArithmeticInstructions(instr uint16) {
 
 	i := instruction{instr}
-	_, vx, vy, opcode2 := i.extractNibbles()
+	_, vx, vy, opcode2 := i.extractNibbles(instr)
 
 	const setVxToVy = 0x0
 	const binaryOr = 0x1
