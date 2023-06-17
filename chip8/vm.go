@@ -72,21 +72,10 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	return false
 }
 
-func (v *VM) fetch() uint16 {
-	return bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
-}
-
 func (v *VM) fetchAndIncrement() uint16 {
 	i := bytesToWord(v.Memory[v.pc], v.Memory[v.pc+1])
 	v.pc += uint16(v.pcIncrementer)
 	return i
-}
-
-func extractIndexAndValue(instr uint16) (byte, byte) {
-	firstByte := extractFirstByte(instr)
-	index := getRightNibble(firstByte)
-	secondByte := extractSecondByte(instr)
-	return index, secondByte
 }
 
 func (v *VM) getXCoordinate() byte {

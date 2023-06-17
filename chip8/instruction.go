@@ -111,6 +111,13 @@ func (i *instruction) addToRegister(instr uint16, v *VM) {
 	v.registers[index] += secondByte
 }
 
+func extractIndexAndValue(instr uint16) (byte, byte) {
+	firstByte := extractFirstByte(instr)
+	index := getRightNibble(firstByte)
+	secondByte := extractSecondByte(instr)
+	return index, secondByte
+}
+
 func (i *instruction) skipIfRegistersEqual(instr uint16, v *VM) {
 	if v.registers[i.vx] == v.registers[i.vy] {
 		v.pc += 2
