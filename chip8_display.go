@@ -10,6 +10,7 @@ type Chip8Display struct {
 	keyCode       sdl.Keycode
 	keyPressed    bool
 	displayBuffer *chip8.DisplayBuffer
+	surface       *sdl.Surface
 }
 
 func (k *Chip8Display) GetKey() int {
@@ -29,6 +30,10 @@ func (d *Chip8Display) startUp() {
 	if err != nil {
 		panic(err)
 	}
+	d.surface, err = window.GetSurface()
+	if err != nil {
+		panic(err)
+	}
 	d.window = window
 }
 
@@ -38,8 +43,7 @@ func (d *Chip8Display) shutdown() {
 }
 
 func (d *Chip8Display) ClearScreen() {
-	surface := d.getSurface()
-	surface.FillRect(nil, 0)
+	d.surface.FillRect(nil, 0)
 	d.window.UpdateSurface()
 }
 
@@ -50,12 +54,10 @@ func (d *Chip8Display) DrawSprite(startAddress uint16, heightInPixels byte, x by
 }
 
 func (d *Chip8Display) writeDisplay() {
-	surface := d.getSurface()
-
 	for y := 0; y < 32; y++ {
 		for x := 0; x < 64; x++ {
 			if d.displayBuffer.GetPixelAt(byte(x), byte(y)) == 1 {
-				d.drawPoint(surface, byte(x), byte(y))
+				d.drawPoint(byte(x), byte(y))
 			}
 		}
 	}
@@ -63,17 +65,9 @@ func (d *Chip8Display) writeDisplay() {
 	d.window.UpdateSurface()
 }
 
-func (d *Chip8Display) drawPoint(surface *sdl.Surface, x byte, y byte) {
+func (d *Chip8Display) drawPoint(x byte, y byte) {
 	rect := sdl.Rect{int32(x) * 10, int32(y) * 10, 10, 10}
-	surface.FillRect(&rect, 0x00fffff0)
-}
-
-func (d *Chip8Display) getSurface() *sdl.Surface {
-	surface, err := d.window.GetSurface()
-	if err != nil {
-		panic(err)
-	}
-	return surface
+	d.surface.FillRect(&rect, 0x00fffff0)
 }
 
 func (d *Chip8Display) PollEvents() (quit chip8.EventType) {
