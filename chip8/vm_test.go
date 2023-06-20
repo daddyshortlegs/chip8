@@ -451,6 +451,27 @@ func (suite *Chip8TestSuite) TestSkipsWhenVxAndVyAreEqual() {
 
 	suite.Equal(uint16(0x20A), suite.vm.pc)
 }
+
+func (suite *Chip8TestSuite) TestProgramCounterIncrementsAfterJump() {
+	suite.Equal(uint16(0x200), suite.vm.pc)
+
+	suite.asm.SetRegister(0, 0x15)
+	// 0x202
+	suite.asm.SetRegister(1, 0x15)
+	// 0x204
+	suite.asm.SkipIfRegistersEqual(0, 1)
+	// 0x208
+	suite.asm.SetRegister(2, 0x69) // This operation gets skipped so register won't be set
+	suite.asm.SetRegister(3, 0x77) // but skip moves PC to this instruction
+	suite.executeInstructions()
+
+	suite.Equal(uint16(0x20C), suite.vm.pc)
+	suite.Equal(byte(0x15), suite.vm.registers[0])
+	suite.Equal(byte(0x15), suite.vm.registers[1])
+	suite.Equal(byte(0x00), suite.vm.registers[2]) // this is zero as set instruction skipped
+	suite.Equal(byte(0x77), suite.vm.registers[3]) // this is zero as set instruction skipped
+}
+
 func (suite *Chip8TestSuite) TestDoesNotSkipWhenVxAndVyAreNotEqual() {
 	suite.Equal(uint16(0x200), suite.vm.pc)
 
