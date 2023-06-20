@@ -150,6 +150,10 @@ func (a *Assembler) Load(xRegister byte) {
 	a.buildArray(0xF0+xRegister, 0x65)
 }
 
+func (a *Assembler) Data(bytes []byte) {
+	a.code = append(a.code, bytes...)
+}
+
 func (a *Assembler) buildArray(key byte, value byte) {
 	opcodes := []byte{key, value}
 	a.code = append(a.code, opcodes...)

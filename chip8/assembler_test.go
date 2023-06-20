@@ -226,6 +226,12 @@ func (suite *AssemblerTestSuite) TestLoad() {
 	suite.Equal([]byte{0xF3, 0x65}, theAssembler.Assemble())
 }
 
+func (suite *AssemblerTestSuite) TestData() {
+	theAssembler := NewAssembler()
+	theAssembler.Data([]byte{0xF3, 0x65, 0xc1, 0xdd, 0xef})
+	suite.Equal([]byte{0xF3, 0x65, 0xc1, 0xdd, 0xef}, theAssembler.Assemble())
+}
+
 func (suite *AssemblerTestSuite) TestProgram() {
 	theAssembler := NewAssembler()
 	theAssembler.SetRegister(0, 0x19)
