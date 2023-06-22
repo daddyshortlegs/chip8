@@ -2,6 +2,7 @@ package main
 
 import (
 	"chip8"
+	"io/ioutil"
 )
 
 func main() {
@@ -13,12 +14,12 @@ func main() {
 
 	vm := chip8.NewVM(&chip8Display, random)
 
-	//dat, _ := ioutil.ReadFile("test_opcode.ch8")
+	dat, _ := ioutil.ReadFile("test_opcode.ch8")
 	//check(err)
 
-	//vm.Load(dat)
+	vm.Load(dat)
 
-	vm.Load(testOpcode())
+	//vm.Load(testOpcode())
 	vm.Run()
 	//Chip8Display.ClearScreen()
 }

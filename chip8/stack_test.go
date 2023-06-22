@@ -40,10 +40,24 @@ func (suite *StackTestSuite) TestPopTwice() {
 	theStack := stack{}
 	theStack.Push(uint16(0x1111))
 	theStack.Push(uint16(0x2222))
-	theStack.Pop()
 	result, _ := theStack.Pop()
+	suite.Equal(uint16(0x2222), result)
+	result, _ = theStack.Pop()
 	suite.Equal(uint16(0x1111), result)
 }
+
+//TODO: We should not be able to pop 3 times
+//func (suite *StackTestSuite) TestPopThrice() {
+//	theStack := stack{}
+//	theStack.Push(uint16(0x1111))
+//	theStack.Push(uint16(0x2222))
+//	result, _ := theStack.Pop()
+//	suite.Equal(uint16(0x2222), result)
+//	result, _ = theStack.Pop()
+//	suite.Equal(uint16(0x1111), result)
+//	result, _ = theStack.Pop()
+//	suite.Equal(uint16(0x1111), result)
+//}
 
 func (suite *StackTestSuite) TestBlowStack() {
 	theStack := stack{}

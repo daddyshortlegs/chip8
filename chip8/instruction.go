@@ -159,9 +159,9 @@ func (i *Instruction) skipIfEqual(instr uint16, v *VM) {
 
 func (i *Instruction) subroutine(instr uint16, v *VM) {
 	address := extract12BitNumber(instr)
+	v.theStack.Push(v.pc)
 	v.pc = address
 	fmt.Printf("Jump to %X\n", v.pc)
-	v.theStack.Push(address)
 	v.pcIncrementer = 0
 }
 

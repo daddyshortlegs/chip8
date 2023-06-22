@@ -14,6 +14,7 @@ type Chip8TestSuite struct {
 }
 
 const FontMemory = 0x50
+const programStart = 0x200
 
 func (suite *Chip8TestSuite) SetupTest() {
 	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, KeyboardEvent, 4}
@@ -511,7 +512,7 @@ func (suite *Chip8TestSuite) TestJumpToSubroutineUpdatesProgramCounterAndPushesT
 	suite.executeInstructions()
 	suite.Equal(uint16(0x345), suite.vm.pc)
 	value, _ := suite.vm.theStack.Pop()
-	suite.Equal(uint16(0x345), value)
+	suite.Equal(uint16(programStart+2), value)
 }
 
 func (suite *Chip8TestSuite) TestReturnFromSubroutine() {
@@ -522,6 +523,26 @@ func (suite *Chip8TestSuite) TestReturnFromSubroutine() {
 	suite.vm.Load(suite.asm.Assemble())
 	suite.vm.Run()
 	suite.Equal(uint16(0xA12), suite.vm.pc)
+}
+
+func (suite *Chip8TestSuite) TestJumpAndReturnFromSubroutine() {
+	const programStart = 0x200
+	suite.asm.Sub(0x20C)
+	suite.asm.SetRegister(0, 0x11)
+	suite.asm.SetRegister(1, 0x22)
+	suite.asm.SetRegister(2, 0x33)
+	suite.asm.SetRegister(3, 0x44)
+	suite.asm.Data([]byte{0x00, 0x00})
+	suite.asm.SetRegister(5, 0xAA) // subroutine
+	suite.asm.Return()
+
+	suite.vm.Load(suite.asm.Assemble())
+	suite.vm.Run()
+	suite.Equal(byte(0x11), suite.vm.registers[0])
+	suite.Equal(byte(0x22), suite.vm.registers[1])
+	suite.Equal(byte(0x33), suite.vm.registers[2])
+	suite.Equal(byte(0x44), suite.vm.registers[3])
+	suite.Equal(byte(0xAA), suite.vm.registers[5])
 }
 
 func (suite *Chip8TestSuite) TestGetKey() {
