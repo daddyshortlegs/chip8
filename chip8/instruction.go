@@ -94,7 +94,7 @@ func (i *Instruction) opDisplay(_ uint16, v *VM) {
 	v.yCoord = v.registers[i.vy] & 31
 	v.registers[15] = 0
 
-	//fmt.Printf("Draw index %X, xreg: %display, yreg: %display, x: %display, y: %display, numBytes: %display\n", v.indexRegister, vx, vy, v.xCoord, v.yCoord, heightInPixels)
+	fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", v.indexRegister, i.vx, i.vy, v.xCoord, v.yCoord, heightInPixels)
 	v.display.DrawSprite(v.indexRegister, heightInPixels, v.xCoord, v.yCoord, v.Memory)
 }
 
@@ -161,13 +161,11 @@ func (i *Instruction) subroutine(instr uint16, v *VM) {
 	address := extract12BitNumber(instr)
 	v.theStack.Push(v.pc)
 	v.pc = address
-	fmt.Printf("Jump to %X\n", v.pc)
 	v.pcIncrementer = 0
 }
 
 func (i *Instruction) jump(instr uint16, v *VM) {
 	v.pc = extract12BitNumber(instr)
-	fmt.Printf("Jump to %X\n", v.pc)
 	v.pcIncrementer = 0
 }
 
@@ -299,7 +297,6 @@ func (i *Instruction) getKey(vx byte, v *VM) {
 	v.processInstructions = false
 	key := v.display.GetKey()
 	v.registers[vx] = byte(key)
-	fmt.Printf("key returned is %d\n", key)
 }
 
 func (i *Instruction) addToIndex(vx byte, v *VM) {

@@ -658,20 +658,6 @@ func (suite *Chip8TestSuite) TestJumpWithoutOffset() {
 	suite.Equal(uint16(0x345), suite.vm.pc)
 }
 
-/*
-	TODO:
-
-Jump test
-Jump to location
-*/
-//func (suite *Chip8TestSuite) TestProgramCounterShouldChange() {
-//	// Programs loaded into 0x200
-//	suite.asm.SetRegister(0, 0x10)
-//	//suite.asm.Jump(0x345)
-//	suite.executeInstructions()
-//	suite.Equal(uint16(0x202), suite.vm.pc)
-//}
-
 func (suite *Chip8TestSuite) TestJumpWithOffset() {
 	data := []byte{0xB3, 0x45}
 	suite.vm.Load(data)
@@ -689,6 +675,29 @@ TODO:
 EX9E and EXA1: Skip if key
 FX18: Timers
 
+*/
+
+/*
+func (suite *Chip8TestSuite) TestSkipIfKeyPressed() {
+	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, KeyboardEvent, 55}
+	suite.mockRandom = MockRandom{55}
+	suite.mockDisplay.SetKey(55)
+	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
+
+	suite.Equal(uint16(0x200), suite.vm.pc)
+
+	suite.asm.SetRegister(0, 0x11)
+	suite.asm.SkipIfKeyPressed(0xA)
+	suite.asm.Data([]byte{0x00, 0x00}) //this would exit the program
+	suite.asm.SetRegister(0xa, 0x69)   // instead this registr should be set
+	suite.vm.Load(suite.asm.Assemble())
+	suite.vm.Run()
+	suite.Equal(byte(55), suite.vm.registers[3])
+
+	suite.executeInstructions()
+
+	suite.Equal(uint16(0x208), suite.vm.pc)
+}
 */
 
 func TestChip8TestSuite(t *testing.T) {
