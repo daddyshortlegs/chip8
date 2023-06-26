@@ -13,6 +13,12 @@ type Chip8Display struct {
 	surface       *sdl.Surface
 }
 
+func NewChip8Display() *Chip8Display {
+	chip8Display := new(Chip8Display)
+	chip8Display.startUp()
+	return chip8Display
+}
+
 func (k *Chip8Display) GetKey() int {
 	k.keyPressed = false
 	return int(k.keyCode)
