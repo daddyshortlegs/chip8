@@ -63,9 +63,9 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	i := NewInstruction(instr)
 
 	if instr == ClearScreen {
-		i.clearScreen(instr, v)
+		i.clearScreen(v)
 	} else if instr == Return {
-		i.opReturn(instr, v)
+		i.opReturn(v)
 	} else {
 		i.execute(instr, v)
 	}

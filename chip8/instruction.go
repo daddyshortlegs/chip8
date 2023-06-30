@@ -9,6 +9,8 @@ type Instruction struct {
 	vy              byte
 	opCode2         byte
 	opCodeFunctions map[byte]Opcode
+	secondByte      byte
+	address         uint16
 }
 
 type Opcode struct {
@@ -16,7 +18,7 @@ type Opcode struct {
 	i    instruction
 }
 
-type instruction func(uint16, *VM)
+type instruction func(*VM)
 type arithmeticOpcodes func(*VM)
 type furtherOpcodes func(byte, *VM)
 
@@ -89,9 +91,10 @@ func (i *Instruction) setupOpCodes() map[byte]Opcode {
 func (i *Instruction) extractNibbles(instr uint16) {
 	i.opCode = extractNibble(instr)
 	i.vx = getRightNibble(extractFirstByte(instr))
-	secondByte := extractSecondByte(instr)
-	i.vy = getLeftNibble(secondByte)
-	i.opCode2 = getRightNibble(secondByte)
+	i.secondByte = extractSecondByte(instr)
+	i.vy = getLeftNibble(i.secondByte)
+	i.opCode2 = getRightNibble(i.secondByte)
+	i.address = extract12BitNumber(instr)
 }
 
 func (i *Instruction) execute(instr uint16, v *VM) {
@@ -102,7 +105,7 @@ func (i *Instruction) execute(instr uint16, v *VM) {
 	if function == nil {
 		fmt.Printf("Unknown instruction %x", i.opCode)
 	} else {
-		function(instr, v)
+		function(v)
 	}
 }
 
@@ -135,7 +138,7 @@ func (i *Instruction) getOpcodeName() string {
 	return functionName
 }
 
-func (i *Instruction) opDisplay(_ uint16, v *VM) {
+func (i *Instruction) opDisplay(v *VM) {
 	heightInPixels := i.opCode2
 
 	v.xCoord = v.registers[i.vx] & 63
@@ -146,78 +149,67 @@ func (i *Instruction) opDisplay(_ uint16, v *VM) {
 	v.display.DrawSprite(v.indexRegister, heightInPixels, v.xCoord, v.yCoord, v.Memory)
 }
 
-func (i *Instruction) opRandom(instr uint16, v *VM) {
+func (i *Instruction) opRandom(v *VM) {
 	randomNumber := v.random.Generate()
-	secondByte := extractSecondByte(instr)
-	v.registers[i.vx] = randomNumber & secondByte
+	v.registers[i.vx] = randomNumber & i.secondByte
 }
 
-func (i *Instruction) jumpWithOffset(instr uint16, v *VM) {
-	v.pc = uint16(v.registers[0]) + extract12BitNumber(instr)
+func (i *Instruction) jumpWithOffset(v *VM) {
+	v.pc = uint16(v.registers[0]) + i.address
 	v.pcIncrementer = 0
 	fmt.Printf("Jump with offset to %X\n", v.pc)
 }
 
-func (i *Instruction) setIndexRegister(instr uint16, v *VM) {
-	v.indexRegister = extract12BitNumber(instr)
+func (i *Instruction) setIndexRegister(v *VM) {
+	v.indexRegister = i.address
 }
 
-func (i *Instruction) skipIfRegistersNotEqual(_ uint16, v *VM) {
+func (i *Instruction) skipIfRegistersNotEqual(v *VM) {
 	if v.registers[i.vx] != v.registers[i.vy] {
 		v.pc += 2
 	}
 }
 
-func (i *Instruction) setRegister(instr uint16, v *VM) {
-	_, secondByte := extractIndexAndValue(instr)
+func (i *Instruction) setRegister(v *VM) {
 	//fmt.Printf("SetRegister %d to %d\n", index, secondByte)
-	v.registers[i.vx] = secondByte
+	v.registers[i.vx] = i.secondByte
 }
 
-func (i *Instruction) addToRegister(instr uint16, v *VM) {
-	_, secondByte := extractIndexAndValue(instr)
+func (i *Instruction) addToRegister(v *VM) {
 	//fmt.Printf("Add To Register [%d] value %d\n", index, secondByte)
-	v.registers[i.vx] += secondByte
+	v.registers[i.vx] += i.secondByte
 }
 
-func extractIndexAndValue(instr uint16) (byte, byte) {
-	firstByte := extractFirstByte(instr)
-	index := getRightNibble(firstByte)
-	secondByte := extractSecondByte(instr)
-	return index, secondByte
-}
-
-func (i *Instruction) skipIfRegistersEqual(_ uint16, v *VM) {
+func (i *Instruction) skipIfRegistersEqual(v *VM) {
 	if v.registers[i.vx] == v.registers[i.vy] {
 		v.pc += 2
 	}
 }
 
-func (i *Instruction) skipIfNotEqual(instr uint16, v *VM) {
-	if v.registers[i.vx] != extractSecondByte(instr) {
+func (i *Instruction) skipIfNotEqual(v *VM) {
+	if v.registers[i.vx] != i.secondByte {
 		v.pc += 2
 	}
 }
 
-func (i *Instruction) skipIfEqual(instr uint16, v *VM) {
-	if v.registers[i.vx] == extractSecondByte(instr) {
+func (i *Instruction) skipIfEqual(v *VM) {
+	if v.registers[i.vx] == i.secondByte {
 		v.pc += 2
 	}
 }
 
-func (i *Instruction) subroutine(instr uint16, v *VM) {
-	address := extract12BitNumber(instr)
+func (i *Instruction) subroutine(v *VM) {
 	v.theStack.Push(v.pc)
-	v.pc = address
+	v.pc = i.address
 	v.pcIncrementer = 0
 }
 
-func (i *Instruction) jump(instr uint16, v *VM) {
-	v.pc = extract12BitNumber(instr)
+func (i *Instruction) jump(v *VM) {
+	v.pc = i.address
 	v.pcIncrementer = 0
 }
 
-func (i *Instruction) opReturn(_ uint16, v *VM) {
+func (i *Instruction) opReturn(v *VM) {
 	address, _ := v.theStack.Pop()
 	v.pc = address
 	fmt.Printf("Stack popped %X\n", v.pc)
@@ -225,12 +217,12 @@ func (i *Instruction) opReturn(_ uint16, v *VM) {
 	v.pcIncrementer = 0
 }
 
-func (i *Instruction) clearScreen(_ uint16, v *VM) {
+func (i *Instruction) clearScreen(v *VM) {
 	println("ClearScreen")
 	v.display.ClearScreen()
 }
 
-func (i *Instruction) executeArithmeticInstructions(_ uint16, v *VM) {
+func (i *Instruction) executeArithmeticInstructions(v *VM) {
 	opCodeFunctions := map[byte]arithmeticOpcodes{
 		setVxToVy:      i.setVxToVy,
 		binaryOr:       i.or,
@@ -309,7 +301,7 @@ func (i *Instruction) shiftLeft(v *VM) {
 	v.registers[i.vx] = v.registers[i.vy] << 1
 }
 
-func (i *Instruction) furtherOperations(instr uint16, v *VM) {
+func (i *Instruction) furtherOperations(v *VM) {
 	m := map[byte]furtherOpcodes{
 		Bcd:           i.bcd,
 		FontChar:      i.fontChar,
@@ -333,13 +325,11 @@ func (i *Instruction) furtherOperations(instr uint16, v *VM) {
 		SetDelayTimer: "setDelayTimer",
 		SetSoundTimer: "setSoundTimer",
 	}
-	secondByte := extractSecondByte(instr)
-
-	functionName := names[secondByte]
+	functionName := names[i.secondByte]
 	fmt.Printf(">>> %s\n", functionName)
-	fmt.Printf(">>> %x\n", secondByte)
+	fmt.Printf(">>> %x\n", i.secondByte)
 
-	f := m[secondByte]
+	f := m[i.secondByte]
 	f(i.vx, v)
 }
 
