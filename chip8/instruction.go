@@ -3,14 +3,20 @@ package chip8
 import "fmt"
 
 type Instruction struct {
-	instr   uint16
-	opCode  byte
-	vx      byte
-	vy      byte
-	opCode2 byte
+	instr           uint16
+	opCode          byte
+	vx              byte
+	vy              byte
+	opCode2         byte
+	opCodeFunctions map[byte]Opcode
 }
 
-type opcodes func(uint16, *VM)
+type Opcode struct {
+	name string
+	i    instruction
+}
+
+type instruction func(uint16, *VM)
 type arithmeticOpcodes func(*VM)
 type furtherOpcodes func(byte, *VM)
 
@@ -54,7 +60,30 @@ const SetSoundTimer = 0x18
 func NewInstruction(instr uint16) *Instruction {
 	i := new(Instruction)
 	i.extractNibbles(instr)
+	i.opCodeFunctions = i.setupOpCodes()
 	return i
+}
+
+func (i *Instruction) setupOpCodes() map[byte]Opcode {
+	opCodeFunctions := map[byte]Opcode{
+		ClearScreen:             Opcode{name: "ClearScreen", i: i.clearScreen},
+		Return:                  Opcode{name: "Return", i: i.opReturn},
+		Jump:                    Opcode{name: "Jump", i: i.jump},
+		Subroutine:              Opcode{name: "Subroutine", i: i.subroutine},
+		SkipIfEqual:             Opcode{name: "SkipIfEqual", i: i.skipIfEqual},
+		SkipIfNotEqual:          Opcode{name: "SkipIfNotEqual", i: i.skipIfNotEqual},
+		SkipIfRegistersEqual:    Opcode{name: "SkipIfRegistersEqual", i: i.skipIfRegistersEqual},
+		SkipIfRegistersNotEqual: Opcode{name: "SkipIfRegistersNotEqual", i: i.skipIfRegistersNotEqual},
+		SetRegister:             Opcode{name: "SetRegister", i: i.setRegister},
+		AddToRegister:           Opcode{name: "AddToRegister", i: i.addToRegister},
+		SetIndexRegister:        Opcode{name: "SetIndexRegister", i: i.setIndexRegister},
+		JumpWithOffset:          Opcode{name: "JumpWithOffset", i: i.jumpWithOffset},
+		OpRandom:                Opcode{name: "OpRandom", i: i.opRandom},
+		Display:                 Opcode{name: "Display", i: i.opDisplay},
+		BitwiseOperations:       Opcode{name: "BitwiseOperations", i: i.executeArithmeticInstructions},
+		FurtherOperations:       Opcode{name: "FurtherOperations", i: i.furtherOperations},
+	}
+	return opCodeFunctions
 }
 
 func (i *Instruction) extractNibbles(instr uint16) {
@@ -66,25 +95,44 @@ func (i *Instruction) extractNibbles(instr uint16) {
 }
 
 func (i *Instruction) execute(instr uint16, v *VM) {
-	opCodeFunctions := map[byte]opcodes{
-		ClearScreen:             i.clearScreen,
-		Return:                  i.opReturn,
-		Jump:                    i.jump,
-		Subroutine:              i.subroutine,
-		SkipIfEqual:             i.skipIfEqual,
-		SkipIfNotEqual:          i.skipIfNotEqual,
-		SkipIfRegistersEqual:    i.skipIfRegistersEqual,
-		SkipIfRegistersNotEqual: i.skipIfRegistersNotEqual,
-		SetRegister:             i.setRegister,
-		AddToRegister:           i.addToRegister,
-		SetIndexRegister:        i.setIndexRegister,
-		JumpWithOffset:          i.jumpWithOffset,
-		OpRandom:                i.opRandom,
-		Display:                 i.opDisplay,
-		BitwiseOperations:       i.executeArithmeticInstructions,
-		FurtherOperations:       i.furtherOperations,
+	fmt.Printf("> %s\n", i.getOpcodeName())
+	fmt.Printf(">>> %x\n", i.opCode)
+
+	function := i.getInstructionFromOpcode()
+	if function == nil {
+		fmt.Printf("Unknown instruction %x", i.opCode)
+	} else {
+		function(instr, v)
 	}
-	opCodeFunctions[i.opCode](instr, v)
+}
+
+func (i *Instruction) getInstructionFromOpcode() instruction {
+	function := i.opCodeFunctions[i.opCode]
+	return function.i
+}
+
+func (i *Instruction) getOpcodeName() string {
+	opCodeNames := map[byte]string{
+		ClearScreen:             "ClearScreen",
+		Return:                  "Return",
+		Jump:                    "Jump",
+		Subroutine:              "Subroutine",
+		SkipIfEqual:             "SkipIfEqual",
+		SkipIfNotEqual:          "SkipIfNotEqual",
+		SkipIfRegistersEqual:    "SkipIfRegistersEqual",
+		SkipIfRegistersNotEqual: "SkipIfRegistersNotEqual",
+		SetRegister:             "SetRegister",
+		AddToRegister:           "AddToRegister",
+		SetIndexRegister:        "SetIndexRegister",
+		JumpWithOffset:          "JumpWithOffset",
+		OpRandom:                "Random",
+		Display:                 "Display",
+		BitwiseOperations:       "Bitwise",
+		FurtherOperations:       "Further",
+	}
+
+	functionName := opCodeNames[i.opCode]
+	return functionName
 }
 
 func (i *Instruction) opDisplay(_ uint16, v *VM) {
@@ -274,7 +322,25 @@ func (i *Instruction) furtherOperations(instr uint16, v *VM) {
 		SetSoundTimer: i.setSoundTimer,
 	}
 
-	m[extractSecondByte(instr)](i.vx, v)
+	names := map[byte]string{
+		Bcd:           "bcd",
+		FontChar:      "fontChar",
+		GetKey:        "getKey",
+		AddToIndex:    "addToIndex",
+		Store:         "store",
+		Load:          "load",
+		GetDelayTimer: "getDelayTimer",
+		SetDelayTimer: "setDelayTimer",
+		SetSoundTimer: "setSoundTimer",
+	}
+	secondByte := extractSecondByte(instr)
+
+	functionName := names[secondByte]
+	fmt.Printf(">>> %s\n", functionName)
+	fmt.Printf(">>> %x\n", secondByte)
+
+	f := m[secondByte]
+	f(i.vx, v)
 }
 
 func (i *Instruction) bcd(vx byte, v *VM) {
@@ -293,7 +359,7 @@ func (i *Instruction) fontChar(vx byte, v *VM) {
 }
 
 func (i *Instruction) getKey(vx byte, v *VM) {
-	// If we get a key then suspend processing of further opcodes
+	// If we get a key then suspend processing of further instruction
 	v.processInstructions = false
 	key := v.display.GetKey()
 	v.registers[vx] = byte(key)
