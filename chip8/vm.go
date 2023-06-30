@@ -60,14 +60,14 @@ func (v *VM) fetchAndProcessInstruction() (quit bool) {
 	}
 
 	v.pcIncrementer = 2
-	i := NewInstruction(instr)
+	i := NewInstruction(instr, v)
 
 	if instr == ClearScreen {
-		i.clearScreen(v)
+		i.clearScreen()
 	} else if instr == Return {
-		i.opReturn(v)
+		i.opReturn()
 	} else {
-		i.execute(instr, v)
+		i.execute()
 	}
 	return false
 }
