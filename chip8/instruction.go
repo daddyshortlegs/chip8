@@ -20,7 +20,7 @@ type Opcode struct {
 
 type instruction func(*VM)
 type arithmeticOpcodes func(*VM)
-type furtherOpcodes func(byte, *VM)
+type furtherOpcodes func(*VM)
 
 const ClearScreen = 0x00E0
 const Return = 0x00EE
@@ -330,11 +330,11 @@ func (i *Instruction) furtherOperations(v *VM) {
 	fmt.Printf(">>> %x\n", i.secondByte)
 
 	f := m[i.secondByte]
-	f(i.vx, v)
+	f(v)
 }
 
-func (i *Instruction) bcd(vx byte, v *VM) {
-	value := v.registers[vx]
+func (i *Instruction) bcd(v *VM) {
+	value := v.registers[i.vx]
 	hundreds, tens, ones := splitNumberIntoUnits(value)
 
 	address := v.indexRegister
@@ -343,24 +343,24 @@ func (i *Instruction) bcd(vx byte, v *VM) {
 	v.Memory[address+2] = ones
 }
 
-func (i *Instruction) fontChar(vx byte, v *VM) {
-	character := v.registers[vx]
+func (i *Instruction) fontChar(v *VM) {
+	character := v.registers[i.vx]
 	v.indexRegister = 0x50 + uint16(character*5)
 }
 
-func (i *Instruction) getKey(vx byte, v *VM) {
+func (i *Instruction) getKey(v *VM) {
 	// If we get a key then suspend processing of further instruction
 	v.processInstructions = false
 	key := v.display.GetKey()
-	v.registers[vx] = byte(key)
+	v.registers[i.vx] = byte(key)
 }
 
-func (i *Instruction) addToIndex(vx byte, v *VM) {
-	v.indexRegister += uint16(v.registers[vx])
+func (i *Instruction) addToIndex(v *VM) {
+	v.indexRegister += uint16(v.registers[i.vx])
 }
 
-func (i *Instruction) store(vx byte, v *VM) {
-	max := int(vx)
+func (i *Instruction) store(v *VM) {
+	max := int(i.vx)
 	startMemory := v.indexRegister
 	for i := 0; i <= max; i++ {
 		v.Memory[startMemory] = v.registers[i]
@@ -368,29 +368,28 @@ func (i *Instruction) store(vx byte, v *VM) {
 	}
 }
 
-func (i *Instruction) load(vx byte, v *VM) {
+func (i *Instruction) load(v *VM) {
 	startMemory := v.indexRegister
-	for i := 0; i <= int(vx); i++ {
-		v.registers[i] = v.Memory[startMemory]
+	for n := 0; n <= int(i.vx); n++ {
+		v.registers[n] = v.Memory[startMemory]
 		startMemory++
 	}
 }
 
-func (i *Instruction) getDelayTimer(vx byte, v *VM) {
+func (i *Instruction) getDelayTimer(v *VM) {
 	// TODO: Test
 	// FX07 sets VX to value of the delay timer
-	v.registers[vx] = v.delayTimer.timer
+	v.registers[i.vx] = v.delayTimer.timer
 }
 
-func (i *Instruction) setDelayTimer(vx byte, v *VM) {
+func (i *Instruction) setDelayTimer(v *VM) {
 	// TODO: Test
 	// FX15 set the delay timer to value in VX
-	v.setDelayTimer(v.registers[vx])
-	//v.delayTimer.timer = v.registers[vx]
+	v.setDelayTimer(v.registers[i.vx])
 }
 
-func (i *Instruction) setSoundTimer(vx byte, _ *VM) {
+func (i *Instruction) setSoundTimer(_ *VM) {
 	// TODO: Test
 	// FX18 sets sound timer to value in VX
-	println("vx = ", vx)
+	println("vx = ", i.vx)
 }
