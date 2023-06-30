@@ -94,7 +94,7 @@ func (i *Instruction) opDisplay(_ uint16, v *VM) {
 	v.yCoord = v.registers[i.vy] & 31
 	v.registers[15] = 0
 
-	fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", v.indexRegister, i.vx, i.vy, v.xCoord, v.yCoord, heightInPixels)
+	//fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", v.indexRegister, i.vx, i.vy, v.xCoord, v.yCoord, heightInPixels)
 	v.display.DrawSprite(v.indexRegister, heightInPixels, v.xCoord, v.yCoord, v.Memory)
 }
 
@@ -329,7 +329,8 @@ func (i *Instruction) getDelayTimer(vx byte, v *VM) {
 func (i *Instruction) setDelayTimer(vx byte, v *VM) {
 	// TODO: Test
 	// FX15 set the delay timer to value in VX
-	v.delayTimer.timer = v.registers[vx]
+	v.setDelayTimer(v.registers[vx])
+	//v.delayTimer.timer = v.registers[vx]
 }
 
 func (i *Instruction) setSoundTimer(vx byte, _ *VM) {

@@ -20,9 +20,13 @@ func (dt *DelayTimer) decrementTimer() {
 	for {
 		if dt.timer > 0 {
 			dt.timer--
-			println("Decrement timer")
+			println("Decrement timer, timer is ", dt.timer)
 		}
 		//time.Sleep(time.Second * 1)
 		time.Sleep(time.Microsecond * 16667)
 	}
+}
+
+func (dt *DelayTimer) setTimer(b byte) {
+	dt.timer = b
 }

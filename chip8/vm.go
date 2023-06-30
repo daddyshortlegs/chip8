@@ -85,3 +85,7 @@ func (v *VM) getXCoordinate() byte {
 func (v *VM) getYCoordinate() byte {
 	return v.yCoord
 }
+
+func (v *VM) setDelayTimer(b byte) {
+	v.delayTimer.setTimer(b)
+}
