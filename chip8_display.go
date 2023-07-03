@@ -7,7 +7,7 @@ import (
 
 type Chip8Display struct {
 	window        *sdl.Window
-	keyCode       byte
+	keyCode       uint8
 	keyPressed    bool
 	displayBuffer *chip8.DisplayBuffer
 	surface       *sdl.Surface
@@ -84,11 +84,13 @@ func (d *Chip8Display) PollEvents() (quit chip8.EventType) {
 			return chip8.QuitEvent
 
 		case *sdl.KeyboardEvent:
-			println("keyboard %s", t.Keysym.Sym)
-			d.keyCode = chip8.KeyCodeToValue(int(t.Keysym.Sym))
-			println("COSMAC VIP key pressed %s", d.keyCode)
-			d.keyPressed = true
-			return chip8.KeyboardEvent
+			if t.Type == sdl.KEYUP {
+				println("keyboard %s", t.Keysym.Sym)
+				d.keyCode = chip8.KeyCodeToValue(int(t.Keysym.Sym))
+				println("COSMAC VIP key pressed %s", d.keyCode)
+				d.keyPressed = true
+				return chip8.KeyboardEvent
+			}
 		}
 	}
 	return chip8.NoEvent
