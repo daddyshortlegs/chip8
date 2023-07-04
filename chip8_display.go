@@ -49,6 +49,7 @@ func (d *Chip8Display) shutdown() {
 }
 
 func (d *Chip8Display) ClearScreen() {
+	d.displayBuffer.ClearScreen()
 	d.surface.FillRect(nil, 0)
 	d.window.UpdateSurface()
 }

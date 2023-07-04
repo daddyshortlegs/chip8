@@ -6,15 +6,22 @@ type DisplayBuffer struct {
 
 func NewDisplayBuffer() *DisplayBuffer {
 	db := new(DisplayBuffer)
-	db.Pixels = make([][]byte, 32)
-	for i := range db.Pixels {
-		db.Pixels[i] = make([]byte, 64)
-	}
-
+	db.wipeBuffer()
 	return db
 }
 
-func (d DisplayBuffer) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) {
+func (d *DisplayBuffer) ClearScreen() {
+	d.wipeBuffer()
+}
+
+func (d *DisplayBuffer) wipeBuffer() {
+	d.Pixels = make([][]byte, 32)
+	for i := range d.Pixels {
+		d.Pixels[i] = make([]byte, 64)
+	}
+}
+
+func (d *DisplayBuffer) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) {
 	yPos := y
 	address := startAddress
 	for n := 0; n < int(heightInPixels); n++ {
@@ -25,7 +32,7 @@ func (d DisplayBuffer) DrawSprite(startAddress uint16, heightInPixels byte, x by
 	}
 }
 
-func (d DisplayBuffer) drawByte(value byte, xpos byte, ypos byte) {
+func (d *DisplayBuffer) drawByte(value byte, xpos byte, ypos byte) {
 	for index := 7; index >= 0; index-- {
 		//fmt.Printf("Drawing at pos %d, %d\n", xpos, ypos)
 		bit := GetValueAtPosition(index, value)
@@ -41,6 +48,6 @@ func (d DisplayBuffer) drawByte(value byte, xpos byte, ypos byte) {
 	}
 }
 
-func (d DisplayBuffer) GetPixelAt(xpos byte, ypos byte) byte {
+func (d *DisplayBuffer) GetPixelAt(xpos byte, ypos byte) byte {
 	return d.Pixels[ypos][xpos]
 }
