@@ -66,22 +66,22 @@ func NewInstruction(instr uint16, vm *VM) *Instruction {
 
 func (i *Instruction) setupOpCodes() map[byte]Opcode {
 	opCodeFunctions := map[byte]Opcode{
-		ClearScreen:             Opcode{name: "ClearScreen", function: i.clearScreen},
-		Return:                  Opcode{name: "Return", function: i.opReturn},
-		Jump:                    Opcode{name: "Jump", function: i.jump},
-		Subroutine:              Opcode{name: "Subroutine", function: i.subroutine},
-		SkipIfEqual:             Opcode{name: "SkipIfEqual", function: i.skipIfEqual},
-		SkipIfNotEqual:          Opcode{name: "SkipIfNotEqual", function: i.skipIfNotEqual},
-		SkipIfRegistersEqual:    Opcode{name: "SkipIfRegistersEqual", function: i.skipIfRegistersEqual},
-		SkipIfRegistersNotEqual: Opcode{name: "SkipIfRegistersNotEqual", function: i.skipIfRegistersNotEqual},
-		SetRegister:             Opcode{name: "SetRegister", function: i.setRegister},
-		AddToRegister:           Opcode{name: "AddToRegister", function: i.addToRegister},
-		SetIndexRegister:        Opcode{name: "SetIndexRegister", function: i.setIndexRegister},
-		JumpWithOffset:          Opcode{name: "JumpWithOffset", function: i.jumpWithOffset},
-		OpRandom:                Opcode{name: "OpRandom", function: i.opRandom},
-		Display:                 Opcode{name: "Display", function: i.opDisplay},
-		BitwiseOperations:       Opcode{name: "BitwiseOperations", function: i.executeArithmeticInstructions},
-		FurtherOperations:       Opcode{name: "FurtherOperations", function: i.furtherOperations},
+		ClearScreen:             {name: "ClearScreen", function: i.clearScreen},
+		Return:                  {name: "Return", function: i.opReturn},
+		Jump:                    {name: "Jump", function: i.jump},
+		Subroutine:              {name: "Subroutine", function: i.subroutine},
+		SkipIfEqual:             {name: "SkipIfEqual", function: i.skipIfEqual},
+		SkipIfNotEqual:          {name: "SkipIfNotEqual", function: i.skipIfNotEqual},
+		SkipIfRegistersEqual:    {name: "SkipIfRegistersEqual", function: i.skipIfRegistersEqual},
+		SkipIfRegistersNotEqual: {name: "SkipIfRegistersNotEqual", function: i.skipIfRegistersNotEqual},
+		SetRegister:             {name: "SetRegister", function: i.setRegister},
+		AddToRegister:           {name: "AddToRegister", function: i.addToRegister},
+		SetIndexRegister:        {name: "SetIndexRegister", function: i.setIndexRegister},
+		JumpWithOffset:          {name: "JumpWithOffset", function: i.jumpWithOffset},
+		OpRandom:                {name: "OpRandom", function: i.opRandom},
+		Display:                 {name: "Display", function: i.opDisplay},
+		BitwiseOperations:       {name: "BitwiseOperations", function: i.executeArithmeticInstructions},
+		FurtherOperations:       {function: i.furtherOperations},
 	}
 	return opCodeFunctions
 }
@@ -185,7 +185,7 @@ func (i *Instruction) skipIfEqual() {
 func (i *Instruction) subroutine() {
 	i.vm.theStack.Push(i.vm.pc)
 	i.vm.pc = i.address
-	i.vm.pcIncrementer = 0
+	//i.vm.pcIncrementer = 0
 }
 
 func (i *Instruction) jump() {
@@ -197,8 +197,6 @@ func (i *Instruction) opReturn() {
 	address, _ := i.vm.theStack.Pop()
 	i.vm.pc = address
 	fmt.Printf("Stack popped %X\n", i.vm.pc)
-
-	i.vm.pcIncrementer = 0
 }
 
 func (i *Instruction) clearScreen() {
@@ -208,17 +206,20 @@ func (i *Instruction) clearScreen() {
 
 func (i *Instruction) executeArithmeticInstructions() {
 	opCodeFunctions := map[byte]Opcode{
-		setVxToVy:      Opcode{name: "SetVxToBy", function: i.setVxToVy},
-		binaryOr:       Opcode{name: "Or", function: i.or},
-		binaryAnd:      Opcode{name: "And", function: i.and},
-		logicalXor:     Opcode{name: "Xor", function: i.xOr},
-		addToVx:        Opcode{name: "AddToVx", function: i.addToVx},
-		subtractFromVx: Opcode{name: "SubtractFromVx", function: i.subtractFromVx},
-		shiftRight:     Opcode{name: "ShiftRight", function: i.shiftRight},
-		subtractFromVy: Opcode{name: "SubtractFromVy", function: i.subtractFromVy},
-		shiftLeft:      Opcode{name: "ShiftLeft", function: i.shiftLeft},
+		setVxToVy:      {name: "SetVxToBy", function: i.setVxToVy},
+		binaryOr:       {name: "Or", function: i.or},
+		binaryAnd:      {name: "And", function: i.and},
+		logicalXor:     {name: "Xor", function: i.xOr},
+		addToVx:        {name: "AddToVx", function: i.addToVx},
+		subtractFromVx: {name: "SubtractFromVx", function: i.subtractFromVx},
+		shiftRight:     {name: "ShiftRight", function: i.shiftRight},
+		subtractFromVy: {name: "SubtractFromVy", function: i.subtractFromVy},
+		shiftLeft:      {name: "ShiftLeft", function: i.shiftLeft},
 	}
-	opCodeFunctions[i.opCode2]()
+
+	fmt.Printf(">>> %s vx=%d vy=%d\n", opCodeFunctions[i.opCode2].name, i.vx, i.vy)
+
+	opCodeFunctions[i.opCode2].function()
 }
 
 func (i *Instruction) setVxToVy() {
