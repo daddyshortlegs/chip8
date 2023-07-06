@@ -1,27 +1,29 @@
 package chip8
 
 type DisplayBuffer struct {
-	Pixels [][]byte
+	Pixels   [][]byte
+	overflow bool
 }
 
 func NewDisplayBuffer() *DisplayBuffer {
 	db := new(DisplayBuffer)
-	db.wipeBuffer()
+	db.Pixels = make([][]byte, 32)
+	for i := range db.Pixels {
+		db.Pixels[i] = make([]byte, 64)
+	}
+	db.overflow = false
 	return db
 }
 
 func (d *DisplayBuffer) ClearScreen() {
-	d.wipeBuffer()
-}
-
-func (d *DisplayBuffer) wipeBuffer() {
-	d.Pixels = make([][]byte, 32)
 	for i := range d.Pixels {
-		d.Pixels[i] = make([]byte, 64)
+		for j := range d.Pixels[i] {
+			d.Pixels[i][j] = 0
+		}
 	}
 }
 
-func (d *DisplayBuffer) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) {
+func (d *DisplayBuffer) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) bool {
 	yPos := y
 	address := startAddress
 	for n := 0; n < int(heightInPixels); n++ {
@@ -30,6 +32,8 @@ func (d *DisplayBuffer) DrawSprite(startAddress uint16, heightInPixels byte, x b
 		d.drawByte(value, x, yPos)
 		yPos++
 	}
+
+	return d.overflow
 }
 
 func (d *DisplayBuffer) drawByte(value byte, xpos byte, ypos byte) {
@@ -40,6 +44,7 @@ func (d *DisplayBuffer) drawByte(value byte, xpos byte, ypos byte) {
 			if d.Pixels[ypos][xpos] == 1 {
 				d.Pixels[ypos][xpos] = 0
 				// Should set VF to 1
+				d.overflow = true
 			} else {
 				d.Pixels[ypos][xpos] = 1
 			}

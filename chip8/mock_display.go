@@ -22,11 +22,12 @@ type drawPatternValues struct {
 	numberOfBytes byte
 }
 
-func (m *mockDisplay) DrawSprite(address uint16, numberOfBytes byte, x byte, y byte, memory [4096]byte) {
+func (m *mockDisplay) DrawSprite(address uint16, numberOfBytes byte, x byte, y byte, memory [4096]byte) bool {
 	values := drawPatternValues{
 		x, y, address, numberOfBytes,
 	}
 	m.values = values
+	return true
 }
 
 func (m *mockDisplay) ClearScreen() {

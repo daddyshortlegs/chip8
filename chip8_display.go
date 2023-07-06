@@ -54,17 +54,20 @@ func (d *Chip8Display) ClearScreen() {
 	d.window.UpdateSurface()
 }
 
-func (d *Chip8Display) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) {
-	d.displayBuffer.DrawSprite(startAddress, heightInPixels, x, y, memory)
+func (d *Chip8Display) DrawSprite(startAddress uint16, heightInPixels byte, x byte, y byte, memory [4096]byte) bool {
+	overflow := d.displayBuffer.DrawSprite(startAddress, heightInPixels, x, y, memory)
 
 	d.writeDisplay()
+	return overflow
 }
 
 func (d *Chip8Display) writeDisplay() {
 	for y := 0; y < 32; y++ {
 		for x := 0; x < 64; x++ {
 			if d.displayBuffer.GetPixelAt(byte(x), byte(y)) == 1 {
-				d.drawPoint(byte(x), byte(y))
+				d.drawPoint(byte(x), byte(y), 0x00fffff0)
+			} else {
+				d.drawPoint(byte(x), byte(y), 0x00000000)
 			}
 		}
 	}
@@ -72,9 +75,9 @@ func (d *Chip8Display) writeDisplay() {
 	d.window.UpdateSurface()
 }
 
-func (d *Chip8Display) drawPoint(x byte, y byte) {
+func (d *Chip8Display) drawPoint(x byte, y byte, colour uint32) {
 	rect := sdl.Rect{int32(x) * 10, int32(y) * 10, 10, 10}
-	d.surface.FillRect(&rect, 0x00fffff0)
+	d.surface.FillRect(&rect, colour)
 }
 
 func (d *Chip8Display) PollEvents() (quit chip8.EventType) {

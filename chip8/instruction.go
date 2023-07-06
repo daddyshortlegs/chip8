@@ -96,8 +96,10 @@ func (i *Instruction) extractNibbles(instr uint16) {
 }
 
 func (i *Instruction) execute() {
-	fmt.Printf("> %s\n", i.getOpcodeName())
-	fmt.Printf(">>> %x\n", i.opCode)
+	name := i.getOpcodeName()
+	if name != "" {
+		fmt.Printf("> %s\n", name)
+	}
 
 	function := i.getInstructionFromOpcode()
 	if function == nil {
@@ -124,8 +126,11 @@ func (i *Instruction) opDisplay() {
 	i.vm.yCoord = i.vm.registers[i.vy] & 31
 	i.vm.registers[15] = 0
 
-	//fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", function.vm.indexRegister, function.vx, function.vy, function.vm.xCoord, function.vm.yCoord, heightInPixels)
-	i.vm.display.DrawSprite(i.vm.indexRegister, heightInPixels, i.vm.xCoord, i.vm.yCoord, i.vm.Memory)
+	fmt.Printf("Draw index %X, xreg: %d, yreg: %d, x: %d, y: %d, numBytes: %d\n", i.vm.indexRegister, i.vx, i.vy, i.vm.xCoord, i.vm.yCoord, heightInPixels)
+	overflow := i.vm.display.DrawSprite(i.vm.indexRegister, heightInPixels, i.vm.xCoord, i.vm.yCoord, i.vm.Memory)
+	if overflow == true {
+		i.vm.registers[0x0F] = 1
+	}
 }
 
 func (i *Instruction) opRandom() {
@@ -202,16 +207,16 @@ func (i *Instruction) clearScreen() {
 }
 
 func (i *Instruction) executeArithmeticInstructions() {
-	opCodeFunctions := map[byte]instruction{
-		setVxToVy:      i.setVxToVy,
-		binaryOr:       i.or,
-		binaryAnd:      i.and,
-		logicalXor:     i.xOr,
-		addToVx:        i.addToVx,
-		subtractFromVx: i.subtractFromVx,
-		shiftRight:     i.shiftRight,
-		subtractFromVy: i.subtractFromVy,
-		shiftLeft:      i.shiftLeft,
+	opCodeFunctions := map[byte]Opcode{
+		setVxToVy:      Opcode{name: "SetVxToBy", function: i.setVxToVy},
+		binaryOr:       Opcode{name: "Or", function: i.or},
+		binaryAnd:      Opcode{name: "And", function: i.and},
+		logicalXor:     Opcode{name: "Xor", function: i.xOr},
+		addToVx:        Opcode{name: "AddToVx", function: i.addToVx},
+		subtractFromVx: Opcode{name: "SubtractFromVx", function: i.subtractFromVx},
+		shiftRight:     Opcode{name: "ShiftRight", function: i.shiftRight},
+		subtractFromVy: Opcode{name: "SubtractFromVy", function: i.subtractFromVy},
+		shiftLeft:      Opcode{name: "ShiftLeft", function: i.shiftLeft},
 	}
 	opCodeFunctions[i.opCode2]()
 }
@@ -294,8 +299,7 @@ func (i *Instruction) furtherOperations() {
 	}
 
 	functionName := opcodes[i.secondByte].name
-	fmt.Printf(">>> %s\n", functionName)
-	fmt.Printf(">>> %x\n", i.secondByte)
+	fmt.Printf(">>> %s %x\n", functionName, i.secondByte)
 
 	f := opcodes[i.secondByte].function
 	f()
