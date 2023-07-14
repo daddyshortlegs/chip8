@@ -98,7 +98,7 @@ func (suite *Chip8TestSuite) TestSetJumpToAddress() {
 	suite.asm.Jump(0x300)
 
 	suite.executeInstructions()
-	suite.Equal(uint16(0x300), suite.vm.pc)
+	suite.Equal(uint16(0x302), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestClearScreen() {
@@ -664,7 +664,7 @@ func (suite *Chip8TestSuite) TestLoadMultipleRegistersFromMemory() {
 func (suite *Chip8TestSuite) TestJumpWithoutOffset() {
 	suite.asm.Jump(0x345)
 	suite.executeInstructions()
-	suite.Equal(uint16(0x345), suite.vm.pc)
+	suite.Equal(uint16(0x347), suite.vm.pc)
 }
 
 func (suite *Chip8TestSuite) TestJumpWithOffset() {

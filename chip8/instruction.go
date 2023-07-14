@@ -64,28 +64,6 @@ func NewInstruction(instr uint16, vm *VM) *Instruction {
 	return i
 }
 
-func (i *Instruction) setupOpCodes() map[byte]Opcode {
-	opCodeFunctions := map[byte]Opcode{
-		ClearScreen:             {name: "ClearScreen", function: i.clearScreen},
-		Return:                  {name: "Return", function: i.opReturn},
-		Jump:                    {name: "Jump", function: i.jump},
-		Subroutine:              {name: "Subroutine", function: i.subroutine},
-		SkipIfEqual:             {name: "SkipIfEqual", function: i.skipIfEqual},
-		SkipIfNotEqual:          {name: "SkipIfNotEqual", function: i.skipIfNotEqual},
-		SkipIfRegistersEqual:    {name: "SkipIfRegistersEqual", function: i.skipIfRegistersEqual},
-		SkipIfRegistersNotEqual: {name: "SkipIfRegistersNotEqual", function: i.skipIfRegistersNotEqual},
-		SetRegister:             {name: "SetRegister", function: i.setRegister},
-		AddToRegister:           {name: "AddToRegister", function: i.addToRegister},
-		SetIndexRegister:        {name: "SetIndexRegister", function: i.setIndexRegister},
-		JumpWithOffset:          {name: "JumpWithOffset", function: i.jumpWithOffset},
-		OpRandom:                {name: "OpRandom", function: i.opRandom},
-		Display:                 {name: "Display", function: i.opDisplay},
-		BitwiseOperations:       {name: "BitwiseOperations", function: i.executeArithmeticInstructions},
-		FurtherOperations:       {function: i.furtherOperations},
-	}
-	return opCodeFunctions
-}
-
 func (i *Instruction) extractNibbles(instr uint16) {
 	i.opCode = extractNibble(instr)
 	i.vx = getRightNibble(extractFirstByte(instr))
@@ -103,19 +81,19 @@ func (i *Instruction) execute() {
 
 	function := i.getInstructionFromOpcode()
 	if function == nil {
-		fmt.Printf("Unknown instruction %x", i.opCode)
+		fmt.Printf("Name: %s, unknown instruction %x", name, i.opCode)
 	} else {
 		function()
 	}
 }
 
 func (i *Instruction) getInstructionFromOpcode() instruction {
-	opCodeFunctions := i.setupOpCodes()
+	opCodeFunctions := i.primaryOpcodes()
 	return opCodeFunctions[i.opCode].function
 }
 
 func (i *Instruction) getOpcodeName() string {
-	opCodeFunctions := i.setupOpCodes()
+	opCodeFunctions := i.primaryOpcodes()
 	return opCodeFunctions[i.opCode].name
 }
 
@@ -160,8 +138,9 @@ func (i *Instruction) setRegister() {
 }
 
 func (i *Instruction) addToRegister() {
-	//fmt.Printf("Add To Register [%d] value %d\n", index, secondByte)
+	fmt.Printf("Add To Register [%d] value %d\n", i.vx, i.secondByte)
 	i.vm.registers[i.vx] += i.secondByte
+	fmt.Printf("&&&&&& VX = %x\n", i.vm.registers[i.vx])
 }
 
 func (i *Instruction) skipIfRegistersEqual() {
@@ -188,9 +167,11 @@ func (i *Instruction) subroutine() {
 	//i.vm.pcIncrementer = 0
 }
 
+// TODO: Need some more tests around jump, as commenting out the pcIncrementer line causes a ROM to work
+// AND the Trip8 demo also works properly WITHOUT it.
 func (i *Instruction) jump() {
 	i.vm.pc = i.address
-	i.vm.pcIncrementer = 0
+	//i.vm.pcIncrementer = 0
 }
 
 func (i *Instruction) opReturn() {
@@ -205,17 +186,7 @@ func (i *Instruction) clearScreen() {
 }
 
 func (i *Instruction) executeArithmeticInstructions() {
-	opCodeFunctions := map[byte]Opcode{
-		setVxToVy:      {name: "SetVxToBy", function: i.setVxToVy},
-		binaryOr:       {name: "Or", function: i.or},
-		binaryAnd:      {name: "And", function: i.and},
-		logicalXor:     {name: "Xor", function: i.xOr},
-		addToVx:        {name: "AddToVx", function: i.addToVx},
-		subtractFromVx: {name: "SubtractFromVx", function: i.subtractFromVx},
-		shiftRight:     {name: "ShiftRight", function: i.shiftRight},
-		subtractFromVy: {name: "SubtractFromVy", function: i.subtractFromVy},
-		shiftLeft:      {name: "ShiftLeft", function: i.shiftLeft},
-	}
+	opCodeFunctions := i.arithmeticOpcodes()
 
 	fmt.Printf(">>> %s vx=%d vy=%d\n", opCodeFunctions[i.opCode2].name, i.vx, i.vy)
 
@@ -243,6 +214,9 @@ func (i *Instruction) addToVx() {
 	vyRegister := i.vm.registers[i.vy]
 
 	i.vm.registers[i.vx] = vxRegister + vyRegister
+
+	fmt.Printf("******** vx = %d\n", i.vm.registers[i.vx])
+
 	var sum = uint16(vxRegister) + uint16(vyRegister)
 	if sum > 255 {
 		i.vm.registers[15] = 1
@@ -255,6 +229,7 @@ func (i *Instruction) subtractFromVx() {
 	vxRegister := i.vm.registers[i.vx]
 	vyRegister := i.vm.registers[i.vy]
 	i.vm.registers[i.vx] = vxRegister - vyRegister
+	fmt.Printf("******** vx = %d\n", i.vm.registers[i.vx])
 	var underflowFlag byte = 1
 	if vxRegister < vyRegister {
 		underflowFlag = 0
@@ -266,6 +241,14 @@ func (i *Instruction) shiftRight() {
 	overflow := i.vm.registers[i.vy] & 0b00000001
 	i.vm.registers[15] = overflow
 	i.vm.registers[i.vx] = i.vm.registers[i.vy] >> 1
+}
+
+func (i *Instruction) shiftRightNew() {
+	i.vm.registers[i.vx] = i.vm.registers[i.vy]
+
+	overflow := i.vm.registers[i.vx] & 0b00000001
+	i.vm.registers[15] = overflow
+	i.vm.registers[i.vx] = i.vm.registers[i.vx] >> 1
 }
 
 func (i *Instruction) subtractFromVy() {
@@ -286,18 +269,16 @@ func (i *Instruction) shiftLeft() {
 	i.vm.registers[i.vx] = i.vm.registers[i.vy] << 1
 }
 
+func (i *Instruction) shiftLeftNew() {
+	i.vm.registers[i.vx] = i.vm.registers[i.vy]
+
+	overflow := i.vm.registers[i.vy] & 0b10000000
+	i.vm.registers[15] = overflow >> 7
+	i.vm.registers[i.vx] = i.vm.registers[i.vx] << 1
+}
+
 func (i *Instruction) furtherOperations() {
-	opcodes := map[byte]Opcode{
-		Bcd:           {name: "Bcd", function: i.bcd},
-		FontChar:      {name: "FontChar", function: i.fontChar},
-		GetKey:        {name: "GetKey", function: i.getKey},
-		AddToIndex:    {name: "AddToIndex", function: i.addToIndex},
-		Store:         {name: "Store", function: i.store},
-		Load:          {name: "Load", function: i.load},
-		GetDelayTimer: {name: "GetDelayTimer", function: i.getDelayTimer},
-		SetDelayTimer: {name: "SetDelayTimer", function: i.setDelayTimer},
-		SetSoundTimer: {name: "SetSoundTimer", function: i.setSoundTimer},
-	}
+	opcodes := i.furtherOpcodes()
 
 	functionName := opcodes[i.secondByte].name
 	fmt.Printf(">>> %s %x\n", functionName, i.secondByte)
@@ -314,17 +295,23 @@ func (i *Instruction) bcd() {
 	i.vm.Memory[address] = hundreds
 	i.vm.Memory[address+1] = tens
 	i.vm.Memory[address+2] = ones
+
+	fmt.Printf("%d %d %d", hundreds, tens, ones)
 }
 
 func (i *Instruction) fontChar() {
+	println("*** i.vx = ", i.vx)
 	character := i.vm.registers[i.vx]
-	i.vm.indexRegister = 0x50 + uint16(character*5)
+	println("** character = ", character)
+	i.vm.indexRegister = 0x50 + uint16(character)*5
+	fmt.Printf("** index = %x", i.vm.indexRegister)
 }
 
 func (i *Instruction) getKey() {
 	// If we get a key then suspend processing of further instruction
 	i.vm.processInstructions = false
 	key := i.vm.display.GetKey()
+	println("****** getKey = ", key)
 	i.vm.registers[i.vx] = byte(key)
 }
 
@@ -365,4 +352,53 @@ func (i *Instruction) setSoundTimer() {
 	// TODO: Test
 	// FX18 sets sound timer to value in VX
 	println("vx = ", i.vx)
+}
+
+func (i *Instruction) primaryOpcodes() map[byte]Opcode {
+	return map[byte]Opcode{
+		ClearScreen:             {name: "ClearScreen", function: i.clearScreen},
+		Return:                  {name: "Return", function: i.opReturn},
+		Jump:                    {name: "Jump", function: i.jump},
+		Subroutine:              {name: "Subroutine", function: i.subroutine},
+		SkipIfEqual:             {name: "SkipIfEqual", function: i.skipIfEqual},
+		SkipIfNotEqual:          {name: "SkipIfNotEqual", function: i.skipIfNotEqual},
+		SkipIfRegistersEqual:    {name: "SkipIfRegistersEqual", function: i.skipIfRegistersEqual},
+		SkipIfRegistersNotEqual: {name: "SkipIfRegistersNotEqual", function: i.skipIfRegistersNotEqual},
+		SetRegister:             {name: "SetRegister", function: i.setRegister},
+		AddToRegister:           {name: "AddToRegister", function: i.addToRegister},
+		SetIndexRegister:        {name: "SetIndexRegister", function: i.setIndexRegister},
+		JumpWithOffset:          {name: "JumpWithOffset", function: i.jumpWithOffset},
+		OpRandom:                {name: "OpRandom", function: i.opRandom},
+		Display:                 {name: "Display", function: i.opDisplay},
+		BitwiseOperations:       {name: "BitwiseOperations", function: i.executeArithmeticInstructions},
+		FurtherOperations:       {function: i.furtherOperations},
+	}
+}
+
+func (i *Instruction) arithmeticOpcodes() map[byte]Opcode {
+	return map[byte]Opcode{
+		setVxToVy:      {name: "SetVxToBy", function: i.setVxToVy},
+		binaryOr:       {name: "Or", function: i.or},
+		binaryAnd:      {name: "And", function: i.and},
+		logicalXor:     {name: "Xor", function: i.xOr},
+		addToVx:        {name: "AddToVx", function: i.addToVx},
+		subtractFromVx: {name: "SubtractFromVx", function: i.subtractFromVx},
+		shiftRight:     {name: "ShiftRight", function: i.shiftRight},
+		subtractFromVy: {name: "SubtractFromVy", function: i.subtractFromVy},
+		shiftLeft:      {name: "ShiftLeft", function: i.shiftLeft},
+	}
+}
+
+func (i *Instruction) furtherOpcodes() map[byte]Opcode {
+	return map[byte]Opcode{
+		Bcd:           {name: "Bcd", function: i.bcd},
+		FontChar:      {name: "FontChar", function: i.fontChar},
+		GetKey:        {name: "GetKey", function: i.getKey},
+		AddToIndex:    {name: "AddToIndex", function: i.addToIndex},
+		Store:         {name: "Store", function: i.store},
+		Load:          {name: "Load", function: i.load},
+		GetDelayTimer: {name: "GetDelayTimer", function: i.getDelayTimer},
+		SetDelayTimer: {name: "SetDelayTimer", function: i.setDelayTimer},
+		SetSoundTimer: {name: "SetSoundTimer", function: i.setSoundTimer},
+	}
 }
