@@ -65,6 +65,7 @@ func NewInstruction(instr uint16, vm *VM) *Instruction {
 }
 
 func (i *Instruction) extractNibbles(instr uint16) {
+	i.instr = instr
 	i.opCode = extractNibble(instr)
 	i.vx = getRightNibble(extractFirstByte(instr))
 	i.secondByte = extractSecondByte(instr)
@@ -74,17 +75,24 @@ func (i *Instruction) extractNibbles(instr uint16) {
 }
 
 func (i *Instruction) execute() {
-	name := i.getOpcodeName()
-	if name != "" {
-		fmt.Printf("> %s\n", name)
+	if i.instr == ClearScreen {
+		i.clearScreen()
+	} else if i.instr == Return {
+		i.opReturn()
+	} else {
+		name := i.getOpcodeName()
+		if name != "" {
+			fmt.Printf("> %s\n", name)
+		}
+
+		function := i.getInstructionFromOpcode()
+		if function == nil {
+			fmt.Printf("Name: %s, unknown instruction %x", name, i.opCode)
+		} else {
+			function()
+		}
 	}
 
-	function := i.getInstructionFromOpcode()
-	if function == nil {
-		fmt.Printf("Name: %s, unknown instruction %x", name, i.opCode)
-	} else {
-		function()
-	}
 }
 
 func (i *Instruction) getInstructionFromOpcode() instruction {
