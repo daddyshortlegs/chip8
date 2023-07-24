@@ -35,6 +35,7 @@ const SetIndexRegister = 0xA
 const JumpWithOffset = 0xB
 const OpRandom = 0xC
 const Display = 0xD
+const SkipIfKey = 0xE
 const FurtherOperations = 0xF
 
 const setVxToVy = 0x00
@@ -87,7 +88,7 @@ func (i *Instruction) execute() {
 
 		function := i.getInstructionFromOpcode()
 		if function == nil {
-			fmt.Printf("Name: %s, unknown instruction %x", name, i.opCode)
+			i.print()
 		} else {
 			function()
 		}
@@ -362,6 +363,27 @@ func (i *Instruction) setSoundTimer() {
 	println("vx = ", i.vx)
 }
 
+func (i *Instruction) skipIfKey() {
+
+	if i.secondByte == 0x9E {
+		key := i.vm.display.GetKey()
+		println("****** skipIfKey = ", key)
+
+		if byte(key) == i.vm.registers[i.vx] {
+			i.vm.pc += 2
+		}
+
+	} else if i.secondByte == 0xA1 {
+		key := i.vm.display.GetKey()
+		println("****** skipIfNotKey = ", key)
+
+		if byte(key) != i.vm.registers[i.vx] {
+			i.vm.pc += 2
+		}
+	}
+
+}
+
 func (i *Instruction) primaryOpcodes() map[byte]Opcode {
 	return map[byte]Opcode{
 		ClearScreen:             {name: "ClearScreen", function: i.clearScreen},
@@ -378,6 +400,7 @@ func (i *Instruction) primaryOpcodes() map[byte]Opcode {
 		JumpWithOffset:          {name: "JumpWithOffset", function: i.jumpWithOffset},
 		OpRandom:                {name: "OpRandom", function: i.opRandom},
 		Display:                 {name: "Display", function: i.opDisplay},
+		SkipIfKey:               {name: "SkipIfKey", function: i.skipIfKey},
 		BitwiseOperations:       {name: "BitwiseOperations", function: i.executeArithmeticInstructions},
 		FurtherOperations:       {function: i.furtherOperations},
 	}
@@ -409,4 +432,8 @@ func (i *Instruction) furtherOpcodes() map[byte]Opcode {
 		SetDelayTimer: {name: "SetDelayTimer", function: i.setDelayTimer},
 		SetSoundTimer: {name: "SetSoundTimer", function: i.setSoundTimer},
 	}
+}
+
+func (i *Instruction) print() {
+	fmt.Printf("Instuction: %x, Name: %s, Opcode %x\n", i.instr, i.getOpcodeName(), i.opCode)
 }

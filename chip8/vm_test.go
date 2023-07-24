@@ -686,28 +686,47 @@ FX18: Timers
 
 */
 
-/*
 func (suite *Chip8TestSuite) TestSkipIfKeyPressed() {
 	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, KeyboardEvent, 55}
 	suite.mockRandom = MockRandom{55}
-	suite.mockDisplay.SetKey(55)
+	suite.mockDisplay.SetKey(0xC)
 	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
 
 	suite.Equal(uint16(0x200), suite.vm.pc)
 
-	suite.asm.SetRegister(0, 0x11)
-	suite.asm.SkipIfKeyPressed(0xA)
-	suite.asm.Data([]byte{0x00, 0x00}) //this would exit the program
-	suite.asm.SetRegister(0xa, 0x69)   // instead this registr should be set
+	suite.asm.SetRegister(0, 0xC)
+	suite.asm.SkipIfKeyPressed(0)
+	suite.asm.SetRegister(0xA, 0x22) // instead this registr should NOT be set
+	suite.asm.SetRegister(0xB, 0x69) // instead this registr should be set
 	suite.vm.Load(suite.asm.Assemble())
 	suite.vm.Run()
-	suite.Equal(byte(55), suite.vm.registers[3])
 
 	suite.executeInstructions()
 
-	suite.Equal(uint16(0x208), suite.vm.pc)
+	suite.NotEqual(byte(0x22), suite.vm.registers[0xA])
+	suite.Equal(byte(0x69), suite.vm.registers[0xB])
 }
-*/
+
+func (suite *Chip8TestSuite) TestSkipIfKeyNotPressed() {
+	suite.mockDisplay = mockDisplay{false, drawPatternValues{}, KeyboardEvent, 55}
+	suite.mockRandom = MockRandom{55}
+	suite.mockDisplay.SetKey(0xC)
+	suite.vm = NewVM(&suite.mockDisplay, suite.mockRandom)
+
+	suite.Equal(uint16(0x200), suite.vm.pc)
+
+	suite.asm.SetRegister(0, 0x9)
+	suite.asm.SkipIfKeyNotPressed(0)
+	suite.asm.SetRegister(0xA, 0x22) // This register should NOT be set as it is skipped
+	suite.asm.SetRegister(0xB, 0x69) // instead this registr should be set
+	suite.vm.Load(suite.asm.Assemble())
+	suite.vm.Run()
+
+	suite.executeInstructions()
+
+	suite.NotEqual(byte(0x22), suite.vm.registers[0xA])
+	suite.Equal(byte(0x69), suite.vm.registers[0xB])
+}
 
 func TestChip8TestSuite(t *testing.T) {
 	suite.Run(t, new(Chip8TestSuite))
