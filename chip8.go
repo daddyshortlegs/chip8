@@ -2,10 +2,20 @@ package main
 
 import (
 	"chip8"
+	"flag"
 	"io/ioutil"
+	"os"
 )
 
 func main() {
+	var romFile = flag.String("rom", "", "The filename of the Chip8 ROM you want to execute")
+	flag.Parse()
+
+	if *romFile == "" {
+		println("Please specify a ROM to load")
+		os.Exit(1)
+	}
+
 	chip8Display := Chip8Display{}
 	defer chip8Display.shutdown()
 	chip8Display.startUp()
@@ -14,7 +24,7 @@ func main() {
 
 	vm := chip8.NewVM(&chip8Display, random)
 
-	dat, _ := ioutil.ReadFile("test_opcode.ch8")
+	dat, _ := ioutil.ReadFile(*romFile)
 	//check(err)
 
 	vm.Load(dat)
